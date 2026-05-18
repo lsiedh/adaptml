@@ -1,22 +1,21 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # AdaptML
 
 import os
 import sys
+import math
 import pdb
 import time
 import random
 
-from numpy.linalg import *
-from numpy.core import *
-from numpy.lib import *
 from numpy import *
+from builtins import sum as _builtin_sum
 
 import multitree
 import ML
 
 start_time = time.time()
-sys.setrecursionlimit(25000)
+sys.setrecursionlimit(50000)
 
 # potential variables:
 tree_fn = None
@@ -25,6 +24,7 @@ migration_fn = None
 mu_fn = None
 thresh_fn = None
 color_map_fn = None
+color_fn = None
 write_dir = None
 cdist = False
 to_truncate = False
@@ -32,7 +32,7 @@ obs_states = None
 
 # load inputs #
 inputs = sys.argv
-for ind in range(1,len(inputs)):
+for ind in range(1, len(inputs)):
     arg_parts = inputs[ind].split('=')
     code = arg_parts[0]
     arg = arg_parts[1]
@@ -50,29 +50,31 @@ for ind in range(1,len(inputs)):
         color_fn = arg
     elif code == 'write':
         write_dir = arg
-    elif code =='thresh':
+    elif code == 'thresh':
         thresh_fn = arg
     elif code == 'cdist':
         cdist = True
-        
+
 # read in data files
 params = {}
 params['cdist'] = cdist
 
 # migration
-migration_f = open(migration_fn,'r')
+migration_f = open(migration_fn, 'r')
 migration_matrix = eval(migration_f.read())
 
-# mu 
-mu_f = open(mu_fn,'r')
+# mu
+mu_f = open(mu_fn, 'r')
 mu = float(mu_f.read().strip())
 mu_f.close()
 
 # colors
-color_f = open(color_fn,'r')
+color_f = open(color_fn, 'r')
 color_hash = {}
 for line in color_f:
     parts = line.strip().split(' ')
+    if len(parts) < 5:
+        continue
     ring_number = parts[0]
     ring_state = parts[1]
     hex_vals = [hex(int(part)) for part in parts[2:]]
@@ -90,9 +92,8 @@ color_f.close()
 # if specified, grab threshold file
 thresh_dict = None
 if thresh_fn is not None:
-    # grab all of the thresholds and toss into a hash
     thresh_dict = {}
-    thresh_f = open(thresh_fn,'r')
+    thresh_f = open(thresh_fn, 'r')
     thresh_lines = thresh_f.readlines()
     for line in thresh_lines:
         line_parts = line.strip().split()
@@ -102,28 +103,27 @@ if thresh_fn is not None:
         thresh_dict[line_parts[0]][line_parts[1]] = thresh
     thresh_f.close()
 
-    # open up files for writing
     bars_fn = write_dir + "/bars.file"
-    bars_f =  open(bars_fn,"w")
+    bars_f = open(bars_fn, "w")
     bar_header = "\t"
-    obs_states = migration_matrix[migration_matrix.keys()[0]].keys()
+    obs_states = list(list(migration_matrix.values())[0].keys())
     for state in obs_states:
         bar_header += state + "\t"
     bars_f.write(bar_header + "\n")
 
     cluster_fn = write_dir + "/cluster.file"
-    cluster_f =  open(cluster_fn,"w")
+    cluster_f = open(cluster_fn, "w")
     prune_fn = write_dir + "/prune.file"
-    prune_f =  open(prune_fn,"w")
+    prune_f = open(prune_fn, "w")
     cdist_fn = write_dir + "/cdist.file"
-    cdist_f =  open(cdist_fn,"w")
+    cdist_f = open(cdist_fn, "w")
 
 lik_fn = write_dir + "/lik.file"
-lik_f =  open(lik_fn,"w")
+lik_f = open(lik_fn, "w")
 
 # build the tree #
-print "Building tree"
-tree_f = open(tree_fn,"r")
+print("Building tree")
+tree_f = open(tree_fn, "r")
 tree_string = tree_f.read().strip()
 tree = multitree.multitree()
 tree.build(tree_string)
@@ -141,24 +141,21 @@ for b in tree.branch_list:
 
 # write the data files
 full_fn = write_dir + "/full.file"
-full_f =  open(full_fn,"w")
+full_f = open(full_fn, "w")
 migration_fn = write_dir + "/habitat.file"
-migration_f =  open(migration_fn,"w")
+migration_f = open(migration_fn, "w")
 
 # write the labels
-habitats = migration_matrix.keys()
+habitats = list(migration_matrix.keys())
 label_line = "LABELS"
-rings = color_hash.keys()
-rings.sort()
+rings = sorted(color_hash.keys())
 for ring in rings:
-    symbols = color_hash[ring].keys()
-    symbols.sort()
+    symbols = sorted(color_hash[ring].keys())
     for symbol in symbols:
         label_line += "," + symbol
 color_line = "COLORS"
 for ring in rings:
-    symbols = color_hash[ring].keys()
-    symbols.sort()
+    symbols = sorted(color_hash[ring].keys())
     for symbol in symbols:
         color_line += "," + color_hash[ring][symbol]
 full_f.write(label_line + "\n")
@@ -182,8 +179,8 @@ tree.color_hash = color_hash
 ML.TreeWipe(tree.a_node)
 
 # learn the likelihoods
-print "Learn habitat assignments"
-ML.LearnLiks(tree,mu,migration_matrix,outgroup)
+print("Learn habitat assignments")
+ML.LearnLiks(tree, mu, migration_matrix, outgroup)
 
 # estimate the states (by making each node trifurcating...)
 root = tree.root
@@ -193,8 +190,8 @@ if kids[0].name in outgroup:
 else:
     true_root = kids[0]
 lik_score = ML.EstimateStates(true_root)
-k = 1 + len(migration_matrix)*(len(migration_matrix.values()[0])-1)
-aic_score = 2*k - 2*lik_score
+k = 1 + len(migration_matrix) * (len(list(migration_matrix.values())[0]) - 1)
+aic_score = 2 * k - 2 * lik_score
 lik_f.write("likelihood: " + str(lik_score) + "\n")
 lik_f.write("aic: " + str(aic_score) + "\n")
 
@@ -218,47 +215,44 @@ if to_truncate:
     min_dist = 0.001
     limit_dist = 0.42
     leaf_dist_fn = write_dir + "/leaves.dist"
-    leaf_dist_f =  open(leaf_dist_fn,"w")
+    leaf_dist_f = open(leaf_dist_fn, "w")
     for leaf in tree.leaf_node_list:
-        this_dist = leaf.DistTo(true_root,None,0)[1]
+        this_dist = leaf.DistTo(true_root, None, 0)[1]
         leaf_dist_f.write(str(this_dist) + "\n")
-        # truncate branches that are too long:
         if this_dist > limit_dist:
-            leaf.TruncateDist(true_root,this_dist,min_dist,limit_dist)
+            leaf.TruncateDist(true_root, this_dist, min_dist, limit_dist)
     leaf_dist_f.close()
 
-    # write out the tree (cheating a little to make the root branches
-    # shorter)
     for branch in tree.root.child_branches:
         branch.length = min_dist
 
 itol_fn = write_dir + "/itol.tree"
-itol_f =  open(itol_fn,"w")
+itol_f = open(itol_fn, "w")
 itol_f.write(true_root.treePrint("") + ";")
 itol_f.close()
 
 # print out the full file
-print "Write out results"
+print("Write out results")
 true_root.FulliTol(files)
 
 if thresh_fn is not None:
 
     strain_fn = write_dir + "/strain.names"
-    strain_f = open(strain_fn,"w")
+    strain_f = open(strain_fn, "w")
 
     # find the divergence points
     divergers = true_root.GetDivergencePoints()
     true_root.divergers = divergers
 
-    true_root.ClusterTest(files,params)
-    true_root.DrawSubclusters(None,cluster_f)
+    true_root.ClusterTest(files, params)
+    true_root.DrawSubclusters(None, cluster_f)
     tree.DrawLeaves(files)
 
     # print lists of constituents in each cluster
-    cluster_roots = filter(lambda a: a.cluster_root,tree.node_dict.values())
+    cluster_roots = [a for a in tree.node_dict.values() if a.cluster_root]
     for cluster_root in cluster_roots:
         strains = cluster_root.leaf_nodes
-        strain_f.write(str(len(strains)) + "\t" + str(cluster_root) +"\n")
+        strain_f.write(str(len(strains)) + "\t" + str(cluster_root) + "\n")
         for strain in strains:
             strain_f.write("\t" + str(strain) + "\n")
         strain_f.write("\n")
@@ -272,7 +266,7 @@ if thresh_fn is not None:
 
     # print pruned topology
     prune_topo_fn = write_dir + "/prune.tree"
-    prune_topo_f =  open(prune_topo_fn,"w")
+    prune_topo_f = open(prune_topo_fn, "w")
     prune_topo_f.write(true_root.treePrint("") + ";")
     prune_topo_f.close()
 
@@ -285,4 +279,3 @@ if thresh_fn is not None:
     cdist_f.close()
     bars_f.close()
     strain_f.close()
-

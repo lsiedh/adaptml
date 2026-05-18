@@ -2,54 +2,54 @@ import random
 import re
 import copy
 import sys
+import math
 import pdb
 
 from numpy import *
-from sets import Set
 
 import multitree
 import branch
 
+
 class node:
 
-    def __init__(self,name,arbre):
+    def __init__(self, name, arbre):
 
-        self.name_backup = name # argh, i need to refactor
+        self.name_backup = name  # argh, i need to refactor
         self.name = name
 
         # assign species names by stripping '.X' or '_X'
         match_str = re.compile(r'[\._]\w*-')
-        name = match_str.sub('-',name,0)
+        name = match_str.sub('-', name, 0)
         # catch trailers
         match_str = re.compile(r'[\._]\w*')
-        species = match_str.sub('',name,0)
+        species = match_str.sub('', name, 0)
 
         self.species = species
         self.perturb_species = species
-	self.range = []
-	self.range.append(self.species)
+        self.range = []
+        self.range.append(self.species)
         self.tree = arbre
-	self.lca_scores = dict()        # keep track of lca scores
-	self.event_str = dict()         # keep track of events for each lca
-	    
-	# clear all of the other variables
+        self.lca_scores = dict()        # keep track of lca scores
+        self.event_str = dict()         # keep track of events for each lca
+
+        # clear all of the other variables
         self.myBranch = None            # used to construct unrooted trees
-	self.branch_list = []           # used to construct unrooted trees
-	self.child_branches = []        # list of branches to kids
-	self.parent_branch = []         # should have length 1
-        
-	self.subnodes = dict()          # all nodes below this
-	self.leaves = None              # leaves below this
+        self.branch_list = []           # used to construct unrooted trees
+        self.child_branches = []        # list of branches to kids
+        self.parent_branch = []         # should have length 1
+
+        self.subnodes = dict()          # all nodes below this
+        self.leaves = None              # leaves below this
         self.leaf_nodes = []
-        
+
         # attach to each node a serial number, to tell nodes apart
-	#self.serial = random.randint(-sys.maxint,sys.maxint)
         self.serial = hash(self.name)
         self.newick_string = ""
         self.counts_dict = {}
         self.ancestors = []
 
-	self.visited = False            # useful for rooting trees
+        self.visited = False            # useful for rooting trees
         self.dup_count = 0              # number of duplications at this node
 
         # things for GetNodeLinkDict
@@ -57,7 +57,7 @@ class node:
 
         # things necessary for UnrootedLeaving
         self.leaf_dict = {}
-        self.name_dict = {}        
+        self.name_dict = {}
         self.branch_dict = {}
         self.unrooted_leaving_visited = False
         self.other_nodes = []
@@ -68,57 +68,44 @@ class node:
 
         # ML things
         self.ML_probs = {}
-        self.ML_null_probs = {}        
+        self.ML_null_probs = {}
         self.ML_state = {}
-        self.old_state = array([0,0,0])
+        self.old_state = array([0, 0, 0])
         self.sum_lik = 0
 
         # cluster things
         self.confidence = math.exp(100)
-        
+
     def __repr__(self):
-	#if self.myBranch == None:
-	#    return self.name
-	#else:	
-	#    return self.name + ":" + str(self.myBranch.length)
-        return self.name 
-    
-    def __eq__(self,other):
-	if self is None or other is None:
-	    return False
-	elif self.serial == other.serial:
-	    return True
-	else:
-	    return False
+        return self.name
 
-    def __ne__(self,other):
+    def __eq__(self, other):
+        if self is None or other is None:
+            return False
+        elif self.serial == other.serial:
+            return True
+        else:
+            return False
 
-	if self is None or other is None:
-	    return True
-	elif self.serial == other.serial:
-	    return False
-	else:
-	    return True
+    def __ne__(self, other):
+        if self is None or other is None:
+            return True
+        elif self.serial == other.serial:
+            return False
+        else:
+            return True
 
-    def __gt__(self,other):
-	if self.name > other.name:
-	    return True
-	else:
-	    return False
+    def __gt__(self, other):
+        return self.name > other.name
 
-    def __lt__(self,other):
-	if self.name < other.name:
-	    return True
-	else:
-	    return False
+    def __lt__(self, other):
+        return self.name < other.name
+
     def __hash__(self):
         return self.serial
 
     def isLeaf(self):
-	if len(self.child_branches) < 1:
-	    return True
-	else:
-	    return False
+        return len(self.child_branches) < 1
 
     def GetKids(self):
         kids = []
@@ -127,28 +114,25 @@ class node:
                 if j is not self:
                     kids.append(j)
         return kids
-	
+
     def PrintStates(this_node):
 
         if len(this_node.ML_state) > 0:
             if max(this_node.ML_state.values()) > 0:
 
-                print "node:",
-                node_name = this_node.treePrint("",0)
-                if node_name[0] is not "(":
-                    print "(" + node_name + ")"
+                print("node:", end=' ')
+                node_name = this_node.treePrint("", 0)
+                if node_name[0] != "(":
+                    print("(" + node_name + ")")
                 else:
-                    print node_name
-                print "prob:",
+                    print(node_name)
+                print("prob:", end=' ')
                 for state in this_node.ML_state:
-                    print state + ":", round(this_node.ML_state[state],3), 
-                print
+                    print(state + ":", round(this_node.ML_state[state], 3), end=' ')
+                print()
 
-                print "lik:", this_node.sum_lik
-                
-                #for state in this_node.ML_probs:
-                #    print state + ":", round(this_node.ML_probs[state],3), 
-                print
+                print("lik:", this_node.sum_lik)
+                print()
 
         for branch in this_node.child_branches:
             for kid_node in branch.ends:
@@ -163,8 +147,8 @@ class node:
                 if i is not this_node:
                     parent = i
         return parent
-	
-    def SaveStates(this_node,perturb_log):
+
+    def SaveStates(this_node, perturb_log):
 
         if len(this_node.ML_state) > 0:
             if max(this_node.ML_state.values()) > 0:
@@ -180,24 +164,22 @@ class node:
                 if kid_node is not this_node:
                     kid_node.SaveStates(perturb_log)
 
-
-
     # recursively print out nodes
-    def BootPrint(self,newickString,verbose=1):
+    def BootPrint(self, newickString, verbose=1):
 
-	count = 0
+        count = 0
 
-	for kid_branches in self.child_branches:
-	    for kid_nodes in kid_branches.ends:
-		if kid_nodes is not self:
-		    if count == 0:
-			newickString += "("
-			newickString = kid_nodes.BootPrint(newickString,verbose)
-		    else:
-			newickString += ","
-			newickString = kid_nodes.BootPrint(newickString,verbose)
-			newickString += ")"
-		    count += 1
+        for kid_branches in self.child_branches:
+            for kid_nodes in kid_branches.ends:
+                if kid_nodes is not self:
+                    if count == 0:
+                        newickString += "("
+                        newickString = kid_nodes.BootPrint(newickString, verbose)
+                    else:
+                        newickString += ","
+                        newickString = kid_nodes.BootPrint(newickString, verbose)
+                        newickString += ")"
+                    count += 1
 
         # add ability to print state probabilities
         boot_str = ""
@@ -205,206 +187,186 @@ class node:
             if len(self.ML_state) > 0:
                 for i in self.ML_state:
                     boot_str += "|" + i + "|"
-                    boot_str += "-" + str(round(self.ML_state[i],3))
+                    boot_str += "-" + str(round(self.ML_state[i], 3))
 
         newickString += boot_str
 
         addString = ""
         if verbose:
             if len(self.parent_branch) > 0 and len(self.child_branches) == 0:
-                addString = self.name + ":" + str(self.parent_branch[0].length) 
-            elif len(self.parent_branch) > 0: 
+                addString = self.name + ":" + str(self.parent_branch[0].length)
+            elif len(self.parent_branch) > 0:
                 addString = ":" + str(self.parent_branch[0].length)
         else:
             if len(self.parent_branch) > 0 and len(self.child_branches) == 0:
-                addString = self.species + ":" + str(self.parent_branch[0].length) 
-            elif len(self.parent_branch) > 0: 
+                addString = self.species + ":" + str(self.parent_branch[0].length)
+            elif len(self.parent_branch) > 0:
                 addString = ":" + str(self.parent_branch[0].length)
 
-	return newickString + addString
-                
+        return newickString + addString
 
-    def addBranch(self,length):
-
-	self.myBranch = branch.branch(length)
-	self.myBranch.addNode(self)
+    def addBranch(self, length):
+        self.myBranch = branch.branch(length)
+        self.myBranch.addNode(self)
 
     # recursively print out nodes
-    def treePrint(self,newickString,verbose=1):
+    def treePrint(self, newickString, verbose=1):
 
-	count = 0
+        count = 0
 
-	for kid_branches in self.child_branches:
-	    for kid_nodes in kid_branches.ends:
-		if kid_nodes is not self:
-		    if count == 0:
-			newickString += "("
-			newickString = kid_nodes.treePrint(newickString,verbose)
-		    else:
-			newickString += ","
-			newickString = kid_nodes.treePrint(newickString,verbose)
-			newickString += ")"
-		    count += 1
+        for kid_branches in self.child_branches:
+            for kid_nodes in kid_branches.ends:
+                if kid_nodes is not self:
+                    if count == 0:
+                        newickString += "("
+                        newickString = kid_nodes.treePrint(newickString, verbose)
+                    else:
+                        newickString += ","
+                        newickString = kid_nodes.treePrint(newickString, verbose)
+                        newickString += ")"
+                    count += 1
 
         addString = ""
 
         if verbose:
             if len(self.parent_branch) > 0 and len(self.child_branches) == 0:
-                addString = self.name + ":" + str(self.parent_branch[0].length) 
-            elif len(self.parent_branch) > 0: 
+                addString = self.name + ":" + str(self.parent_branch[0].length)
+            elif len(self.parent_branch) > 0:
                 addString = ":" + str(self.parent_branch[0].length)
         else:
             if len(self.parent_branch) > 0 and len(self.child_branches) == 0:
-                addString = self.name 
-	return newickString + addString
+                addString = self.name
+        return newickString + addString
 
     # join two nodes in a central node
-    def unite(self,node2):
+    def unite(self, node2):
 
-	# create a new node
-	new_node_name = self.name + "-" + node2.name
-	center_node = node(new_node_name,self.tree)
-	self.myBranch.addNode(center_node)
-	node2.myBranch.addNode(center_node)
-	return center_node
+        # create a new node
+        new_node_name = self.name + "-" + node2.name
+        center_node = node(new_node_name, self.tree)
+        self.myBranch.addNode(center_node)
+        node2.myBranch.addNode(center_node)
+        return center_node
 
     # recursively impose a hierarchy
     def imposeHierarchy(self):
 
-	# find all the child nodes that have yet to be visited and
-	# assign their children
-	for kid_branch in self.child_branches:
-	    for node in kid_branch.ends:
-		if not node.visited and node is not self:
-		    node.visited = True
-		    node.parent_branch.append(kid_branch)
-		    for child_branch in node.branch_list:
-			if child_branch is not kid_branch:
-			    node.child_branches.append(child_branch)
-			    node.imposeHierarchy()
+        # find all the child nodes that have yet to be visited and
+        # assign their children
+        for kid_branch in self.child_branches:
+            for node in kid_branch.ends:
+                if not node.visited and node is not self:
+                    node.visited = True
+                    node.parent_branch.append(kid_branch)
+                    for child_branch in node.branch_list:
+                        if child_branch is not kid_branch:
+                            node.child_branches.append(child_branch)
+                            node.imposeHierarchy()
 
-    # recursively label the roots of subtrees w/ the leaves contained
-    # below
+    # recursively label the roots of subtrees w/ the leaves contained below
     def subtreeLabel(self):
 
-	leaf_vec = []
-	
-	if self.leaves is not None:
-	    return self.leaves
+        leaf_vec = []
 
-	# recurse
+        if self.leaves is not None:
+            return self.leaves
+
+        # recurse
         kids = self.GetKids()
         for kid in kids:
             child_leaves = kid.subtreeLabel()
             leaf_vec.extend(child_leaves)
 
-	# once you hit a leaf
-	if len(self.child_branches) == 0:
-	    leaf_vec.append(self.species)
+        # once you hit a leaf
+        if len(self.child_branches) == 0:
+            leaf_vec.append(self.species)
             self.leaf_nodes.append(self)
         else:
             for kid in kids:
                 self.leaf_nodes.extend(kid.leaf_nodes)
-            
-	# non-duplicates:
-	leaf_vec = dict(map(lambda i: (i,1),leaf_vec))
-	self.leaves = leaf_vec
-	return leaf_vec.keys()
+
+        # non-duplicates
+        leaf_vec = dict(map(lambda i: (i, 1), leaf_vec))
+        self.leaves = leaf_vec
+        return list(leaf_vec.keys())
 
     # figure out which species tree node a gene tree node maps to
-    def subtreeMap(self,species_node):
-	
-	# do the children of the current species node possess the
-	# relevant genes?  if so, follow that child.  if not, return
-	# the current node
+    def subtreeMap(self, species_node):
 
-	foundSet = 0
-	for kid_branches in species_node.child_branches:
-	    for kid_nodes in kid_branches.ends:
-		if kid_nodes is not species_node:
+        foundSet = 0
+        for kid_branches in species_node.child_branches:
+            for kid_nodes in kid_branches.ends:
+                if kid_nodes is not species_node:
 
-		    s_leaves = kid_nodes.leaves
-		    g_leaves = self.leaves
+                    s_leaves = kid_nodes.leaves
+                    g_leaves = self.leaves
 
-		    # count how many elements of the gene set of
-		    # leaves are not in the species set of leaves
+                    n = 0
+                    for i in g_leaves.keys():
+                        if not i in s_leaves:
+                            n += 1
+                            break
 
-		    n = 0
-		    for i in g_leaves.keys():
-			if not i in s_leaves:
-			    n += 1
-			    break
-		    
-		    # if you can see somewhere to descend, follow it
-		    if n == 0:
-			return self.subtreeMap(kid_nodes)
+                    if n == 0:
+                        return self.subtreeMap(kid_nodes)
 
-	# once you've run out of places to descend, just return
-	# wherever you've ended up:
-	return species_node
+        return species_node
 
     # recursively store at each node a hash of all nodes below
     def Find_Subnodes(self):
 
-	for kid_branches in self.child_branches:
-	    for kid_nodes in kid_branches.ends:
-		if kid_nodes is not self:
-		    new_dict = kid_nodes.Find_Subnodes()
-		    for k in new_dict.keys():
-			if not k in self.subnodes:
-			    self.subnodes[k] = 1
-		    # self.subnodes.extend(kid_nodes.Find_Subnodes())
+        for kid_branches in self.child_branches:
+            for kid_nodes in kid_branches.ends:
+                if kid_nodes is not self:
+                    new_dict = kid_nodes.Find_Subnodes()
+                    for k in new_dict.keys():
+                        if not k in self.subnodes:
+                            self.subnodes[k] = 1
 
-	# self.subnodes.append(self)
-	self.subnodes[self.species] = 1
-	return self.subnodes
+        self.subnodes[self.species] = 1
+        return self.subnodes
 
-    # find the last common ancestor of two nodes.  will descend from
-    # the subroot (self) looking to see which children possess both
-    # nodes.  if neither children possess both nodes, return current
-    # node
-
-    def Find_LCA(self,node1,node2):
+    # find the last common ancestor of two nodes.
+    def Find_LCA(self, node1, node2):
 
         for kid_branches in self.child_branches:
             for kid_nodes in kid_branches.ends:
                 if kid_nodes is not self:
                     if node1.species in kid_nodes.subnodes:
                         if node2.species in kid_nodes.subnodes:
-                            return kid_nodes.Find_LCA(node1,node2)
+                            return kid_nodes.Find_LCA(node1, node2)
         return self
 
     # get list of all vertices in a tree
     def Fill_Node_Dict(vertex):
-	
-	# vertex.tree.node_dict[vertex.name] = vertex
+
         vertex.tree.node_dict[vertex.name] = vertex
 
-	for kid_branches in vertex.child_branches:
-	    for kid_nodes in kid_branches.ends:
-		if kid_nodes is not vertex:
-		    kid_nodes.Fill_Node_Dict()
+        for kid_branches in vertex.child_branches:
+            for kid_nodes in kid_branches.ends:
+                if kid_nodes is not vertex:
+                    kid_nodes.Fill_Node_Dict()
 
     # initialize hash tables for lca scores for each node
-    def Init_LCA_Scores(vertex,node_dict):
+    def Init_LCA_Scores(vertex, node_dict):
 
-	for tnode in node_dict:
-	    vertex.lca_scores[tnode.name] = node.maxInt
+        for tnode in node_dict:
+            vertex.lca_scores[tnode.name] = node.maxInt
 
-	for kid_branches in vertex.child_branches:
-	    for kid_nodes in kid_branches.ends:
-		if kid_nodes is not vertex:
-		    kid_nodes.Init_LCA_Scores(node_dict)
+        for kid_branches in vertex.child_branches:
+            for kid_nodes in kid_branches.ends:
+                if kid_nodes is not vertex:
+                    kid_nodes.Init_LCA_Scores(node_dict)
 
     # determine if one node is descended from the other ...
-    def Are_Related(node1,node2):
+    def Are_Related(node1, node2):
 
-	verdict = False
-	for e in node1.leaves.keys():
-	    if e in node2.leaves:
-		verdict = True
+        verdict = False
+        for e in node1.leaves.keys():
+            if e in node2.leaves:
+                verdict = True
 
-	return verdict
+        return verdict
 
     # method to list all the leaves of this node, keyed by the parent
     def UnrootedLeaving(this_node):
@@ -419,16 +381,16 @@ class node:
         # get leaves in each direction
         for parent_node in other_nodes:
 
-            child_nodes = list(Set(other_nodes).difference(Set([parent_node])))
-            this_node.GetChildLeaves(parent_node,child_nodes)
+            child_nodes = list(set(other_nodes).difference({parent_node}))
+            this_node.GetChildLeaves(parent_node, child_nodes)
 
         # when done, move on to neighboring nodes:
         for node in other_nodes:
 
-            if len(node.leaf_dict) is not len(node.branch_list):
+            if len(node.leaf_dict) != len(node.branch_list):
                 node.UnrootedLeaving()
-                
-    def GetLeaves(this_node,parent_node):
+
+    def GetLeaves(this_node, parent_node):
 
         # if the leaf dict has already been defined:
         if parent_node in this_node.leaf_dict:
@@ -436,7 +398,7 @@ class node:
 
         # if is a leaf
         if len(this_node.branch_list) < 2:
-            
+
             this_node.tree.leaf_node_list.append(this_node)
 
             if this_node.species in this_node.tree.species_count:
@@ -445,16 +407,16 @@ class node:
                 this_node.tree.species_count[this_node.species] = 1
 
             this_node.leaf_dict[parent_node] = [this_node.species]
-            this_node.name_dict[parent_node] = [this_node.name]          
+            this_node.name_dict[parent_node] = [this_node.name]
             return this_node.leaf_dict[parent_node], this_node.name_dict[parent_node]
 
         other_nodes = this_node.GetOtherNodes()
-        child_nodes = list(Set(other_nodes).difference(Set([parent_node])))
-        this_node.GetChildLeaves(parent_node,child_nodes)
-            
+        child_nodes = list(set(other_nodes).difference({parent_node}))
+        this_node.GetChildLeaves(parent_node, child_nodes)
+
         return this_node.leaf_dict[parent_node], this_node.name_dict[parent_node]
 
-    def GetChildLeaves(this_node,parent_node,other_nodes):
+    def GetChildLeaves(this_node, parent_node, other_nodes):
 
         merge_list = []
         name_list = []
@@ -465,7 +427,7 @@ class node:
                     continue
 
             kid_leaves, kid_names = kid_node.GetLeaves(this_node)
-            
+
             if type(kid_leaves[0]) is not type(''):
                 merge_list.extend(kid_leaves[0])
                 name_list.extend(kid_names[0])
@@ -473,7 +435,6 @@ class node:
                 merge_list.extend(kid_leaves)
                 name_list.extend(kid_names)
 
-            # this is a total hack
             this_node.leaf_dict[parent_node] = []
             this_node.name_dict[parent_node] = []
 
@@ -482,7 +443,7 @@ class node:
         this_node.leaf_dict[parent_node].extend(merge_list)
         this_node.name_dict[parent_node].extend(name_list)
 
-    def GetNodeLinkDict(this_node,node_link_dict):
+    def GetNodeLinkDict(this_node, node_link_dict):
 
         this_node.link_dict_visited = True
         leaf_dict = this_node.leaf_dict
@@ -493,17 +454,16 @@ class node:
             if type(subleaves[0]) == type([]):
                 subleaves = subleaves[0]
             sub_str = repr(subleaves)
-            
+
             if sub_str in node_link_dict:
-                node_link_dict[sub_str].append((this_node,key))
+                node_link_dict[sub_str].append((this_node, key))
             else:
-                node_link_dict[sub_str] = [(this_node,key)]
-            # node_link_dict[sub_str] = (this_node,key)
+                node_link_dict[sub_str] = [(this_node, key)]
 
         # after that's been done, decide where to recurse
         for relative in leaf_dict:
 
-            relative_keys = relative.leaf_dict.keys()
+            relative_keys = list(relative.leaf_dict.keys())
             subleaves = relative.leaf_dict[relative_keys[0]]
             subleaves.sort()
 
@@ -524,10 +484,8 @@ class node:
 
         return other_nodes
 
-    # get the distance between two nodes:
-    # call as follows:
-    # found, dist = node1.DistTo(node2)
-    def DistTo(this_node,that_node,this_branch=None,dist=0):
+    # get the distance between two nodes
+    def DistTo(this_node, that_node, this_branch=None, dist=0):
 
         # what to do at the end
         if this_node is that_node:
@@ -540,20 +498,20 @@ class node:
             if i is not this_branch:
                 for j in i.ends:
                     if j is not this_node:
-                        found, new_dist = j.DistTo(that_node,i,dist+i.immutable_length)
+                        found, new_dist = j.DistTo(that_node, i, dist + i.immutable_length)
                         if found is True:
                             was_found = found
                             found_dist = new_dist
 
         return was_found, found_dist
-        
+
     def NodeWipe(this_node):
 
         for kid_branches in this_node.child_branches:
             for kid_nodes in kid_branches.ends:
                 if kid_nodes is not this_node:
                     kid_nodes.NodeWipe()
-                        
+
         this_node.child_branches = []
         this_node.parent_branch = []
         this_node.subnodes = {}
@@ -561,7 +519,7 @@ class node:
         this_node.ML_state = {}
         this_node.ML_probs = {}
 
-    def LearnMR(this_node,MR_matrix,species_key):
+    def LearnMR(this_node, MR_matrix, species_key):
 
         if len(this_node.branches) < 1:
             pdb.set_trace()
@@ -569,5 +527,4 @@ class node:
         for i in this_node.child_branches:
             for j in i.ends:
                 if j is not this_node:
-                    j.LearnMR(MR_matrix,species_key)
-        
+                    j.LearnMR(MR_matrix, species_key)

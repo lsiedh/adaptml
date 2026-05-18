@@ -1,5 +1,5 @@
 tree = example/vibrio.hsp60.tree
-init_hab_num = 10
+init_hab_num = 16
 outgroup = 5S_OUTGROUP
 write_dir = example/output/
 rateopt = avg

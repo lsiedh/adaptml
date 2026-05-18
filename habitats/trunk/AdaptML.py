@@ -1,22 +1,23 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # AdaptML
 
 import os
 import sys
+import math
 import pdb
 import time
 import random
 
-from numpy.linalg import *
-from numpy.core import *
-from numpy.lib import *
 from numpy import *
+# Keep builtin sum accessible after `from numpy import *` shadows it.
+# numpy.sum on dict_views misbehaves in numpy 2.x.
+from builtins import sum as _builtin_sum
 
 import multitree
 import ML
 
-start_time = time.time()
-sys.setrecursionlimit(25000)
+start_time = time.perf_counter()
+sys.setrecursionlimit(50000)
 
 # load inputs #
 tree_filename = None
@@ -29,7 +30,7 @@ habitat_thresh = 0.10
 converge_thresh = 0.001
 
 inputs = sys.argv
-for ind in range(1,len(inputs)):
+for ind in range(1, len(inputs)):
     arg_parts = inputs[ind].split('=')
     code = arg_parts[0]
     arg = arg_parts[1]
@@ -51,15 +52,15 @@ for ind in range(1,len(inputs)):
         habitat_thresh = float(arg)
 
 # track stats
-stats_file = open(write_dir + '/stats.file','w')
+stats_file = open(write_dir + '/stats.file', 'w')
 
 # build the tree #
-print "\nBuilding Tree"
-tree_file = open(tree_filename,"r")
+print("\nBuilding Tree")
+tree_file = open(tree_filename, "r")
 tree_string = tree_file.read().strip()
 tree = multitree.multitree()
 tree.build(tree_string)
-if tree.root != None:
+if tree.root is not None:
     sys.stderr.write("Input tree is rooted.  Must use unrooted tree")
     sys.exit()
 tree_file.close()
@@ -76,14 +77,14 @@ for b in tree.branch_list:
 
 # how many species are there?
 species_dict = tree.species_count
-total_leaves = sum(species_dict.values())
+total_leaves = _builtin_sum(species_dict.values())
 habitat_list = []
-filter_list = species_dict.keys()
+filter_list = list(species_dict.keys())
 for i in range(hab_num):
     habitat_list.append("habitat " + str(i))
 
-# create O(n^3) habitat matrix
-print "Instantiating Habitat Matrix"
+# create habitat matrix
+print("Instantiating Habitat Matrix")
 habitat_matrix = {}
 for habitat in habitat_list:
     habitat_matrix[habitat] = {}
@@ -91,7 +92,7 @@ for habitat in habitat_list:
         habitat_matrix[habitat][filt] = random.random()
 
     # normalize
-    scale = sum(habitat_matrix[habitat].values())
+    scale = _builtin_sum(habitat_matrix[habitat].values())
     for filt in filter_list:
         habitat_matrix[habitat][filt] /= scale
 
@@ -99,48 +100,48 @@ score = -9999.99999999
 diff = 1.0
 old_diff = 1.0
 
-print "Learning Habitats:"
+print("Learning Habitats:")
 while 1:
     counter = 0
 
-    print "\t" + str(len(habitat_matrix)) + " habitats"
-    print "\tRefinement Steps [d(Habitat Score)]: "
+    print("\t" + str(len(habitat_matrix)) + " habitats")
+    print("\tRefinement Steps [d(Habitat Score)]: ")
     stats_str = ""
     stats_str += "counter\t"
-    stats_str += "habs\t"        
+    stats_str += "habs\t"
     stats_str += "ML score\t"
-    stats_str += "mu\t"        
-    stats_str += "\thabitat dist diff\t"        
+    stats_str += "mu\t"
+    stats_str += "\thabitat dist diff\t"
     stats_file.write(stats_str + "\n")
 
     while 1:
         stats_str = ""
         stats_str += str(counter) + "\t"
-        stats_str += str(len(habitat_matrix)) + "\t"        
+        stats_str += str(len(habitat_matrix)) + "\t"
         stats_str += str(score) + "\t"
-        stats_str += str(mu) + "\t"        
-        stats_str += str(diff) + "\t"        
+        stats_str += str(mu) + "\t"
+        stats_str += str(diff) + "\t"
         stats_file.write(stats_str + "\n")
         stats_file.flush()
-        print "\t\t" + str(counter) + "\t" + str(diff)
+        print("\t\t" + str(counter) + "\t" + str(diff))
 
         # wipe the likelihoods off of the tree
         ML.TreeWipe(tree)
 
         # learn the likelihoods
-        ML.LearnLiks(tree,mu,habitat_matrix)
+        ML.LearnLiks(tree, mu, habitat_matrix)
 
         # estimate the states (by making each node trifurcating...)
-        ML.EstimateStates(tree.a_node,habitat_matrix)
-        
+        ML.EstimateStates(tree.a_node, habitat_matrix)
+
         # upgrade guesses for mu and habitat matrix
         this_migrate = habitat_matrix
-        mu, habitat_matrix = ML.LearnRates(tree,mu,habitat_matrix,rateopt)
+        mu, habitat_matrix = ML.LearnRates(tree, mu, habitat_matrix, rateopt)
         new_migrate = habitat_matrix
 
         # stop?
         old_diff = diff
-        score, diff = ML.CheckConverge(tree,new_migrate,this_migrate)
+        score, diff = ML.CheckConverge(tree, new_migrate, this_migrate)
 
         if diff < converge_thresh:
             break
@@ -148,8 +149,8 @@ while 1:
         # this should break the loop if you end up bouncing back and
         # forth between the same values
         sig_figs = 8
-        diff1 = math.floor(diff*math.pow(10,sig_figs))
-        diff2 = math.floor(old_diff*math.pow(10,sig_figs))        
+        diff1 = math.floor(diff * math.pow(10, sig_figs))
+        diff2 = math.floor(old_diff * math.pow(10, sig_figs))
         if diff1 > 0:
             if diff1 == diff2:
                 break
@@ -160,7 +161,7 @@ while 1:
     #########################
     # remove similar groups #
     #########################
-    print "Removing Redundant Habitats"
+    print("Removing Redundant Habitats")
     new_habitats = {}
     for habitat_1 in habitat_matrix:
         old_habitat = habitat_matrix[habitat_1]
@@ -170,7 +171,7 @@ while 1:
             score = 0
             for this_filter in old_habitat:
                 diff = old_habitat[this_filter] - new_habitat[this_filter]
-                score += math.pow(diff,2)
+                score += math.pow(diff, 2)
             if score < habitat_thresh:
                 add_habitat = False
         if add_habitat:
@@ -180,8 +181,9 @@ while 1:
     habitat_matrix = new_habitats
     if len(habitat_matrix) < 2:
         break
-print "Learned " + str(len(habitat_matrix)) + " habitats",
-print "in " + str(time.clock()) + " seconds"
+
+print("Learned " + str(len(habitat_matrix)) + " habitats", end=' ')
+print("in {:.2f} seconds".format(time.perf_counter() - start_time))
 stats_file.write("\nEnd Of Run\n")
 
 ############################
@@ -197,12 +199,16 @@ for b in tree.branch_list:
         tree.rootify(b)
 
 # write out the results
-mu_file = open(write_dir + '/mu.val','w')
+mu_file = open(write_dir + '/mu.val', 'w')
 mu_file.write(str(mu))
 mu_file.close()
 
-habitat_file = open(write_dir + '/habitat.matrix','w')
-habitat_file.write(str(habitat_matrix))
+# cast to plain Python floats so downstream `eval()` doesn't need `np.float64`
+habitat_matrix_plain = {
+    str(h): {str(k): float(v) for k, v in habitat_matrix[h].items()}
+    for h in habitat_matrix
+}
+habitat_file = open(write_dir + '/habitat.matrix', 'w')
+habitat_file.write(str(habitat_matrix_plain))
 habitat_file.close()
 stats_file.close()
-

@@ -1,0 +1,1982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AdaptML · SCELSE</title>
+<style>
+  :root {
+    --teal:        #0AA0A0;
+    --teal-dark:   #088080;
+    --navy:        #0F2E4C;
+    --navy-soft:   #2A4866;
+    --gray-bg:     #F4F6F8;
+    --gray-card:   #FFFFFF;
+    --gray-line:   #E2E6EA;
+    --gray-text:   #4A5660;
+    --coral:       #E76F51;
+    --shadow:      0 1px 3px rgba(15,46,76,.07), 0 6px 24px rgba(15,46,76,.06);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--gray-bg);
+    color: var(--navy);
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+  }
+
+  a { color: var(--teal-dark); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ─── Header ─── */
+  header.topbar {
+    background: var(--gray-card);
+    border-bottom: 1px solid var(--gray-line);
+    padding: 14px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  header.topbar .brand {
+    font-weight: 600;
+    letter-spacing: .3px;
+    color: var(--navy);
+    font-size: 16px;
+  }
+  header.topbar .brand .accent { color: var(--teal); }
+  header.topbar nav a {
+    margin-left: 22px;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 1.4px;
+    font-weight: 600;
+    color: var(--navy-soft);
+  }
+  header.topbar nav a:hover { color: var(--teal-dark); text-decoration: none; }
+
+  /* ─── Hero ─── */
+  .hero {
+    position: relative;
+    background:
+      radial-gradient(800px 400px at 90% 110%, rgba(10,160,160,0.45), transparent 60%),
+      linear-gradient(110deg, #0F2E4C 0%, #11436B 55%, #0AA0A0 130%);
+    color: #fff;
+    padding: 56px 32px 64px;
+    overflow: hidden;
+  }
+  .hero h1 {
+    margin: 0 0 14px;
+    font-size: 38px;
+    line-height: 1.15;
+    font-weight: 600;
+    letter-spacing: -.2px;
+    max-width: 720px;
+  }
+  .hero p.sub {
+    margin: 0;
+    max-width: 720px;
+    font-size: 16.5px;
+    line-height: 1.55;
+    color: rgba(255,255,255,0.85);
+  }
+  .hero p.cite {
+    margin: 24px 0 0;
+    font-size: 13px;
+    color: rgba(255,255,255,0.65);
+    max-width: 720px;
+  }
+  .hero p.cite a { color: #B6E9E9; }
+  .hero svg.motif {
+    position: absolute;
+    right: -40px;
+    top: 30px;
+    width: 320px;
+    height: 280px;
+    opacity: 0.32;
+    pointer-events: none;
+  }
+
+  /* ─── Page sections ─── */
+  main {
+    max-width: 1080px;
+    margin: -32px auto 56px;
+    padding: 0 32px;
+    position: relative;
+  }
+  .card {
+    background: var(--gray-card);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 28px 32px;
+    margin-bottom: 28px;
+  }
+  .card h2 {
+    margin: 0 0 18px;
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--navy);
+  }
+  .card h2 .step {
+    display: inline-block;
+    background: var(--teal);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 3px 8px 2px;
+    border-radius: 4px;
+    margin-right: 10px;
+    vertical-align: 2px;
+  }
+  .card h3 { margin: 22px 0 10px; font-size: 14px; font-weight: 600; color: var(--navy-soft); letter-spacing: .2px; }
+  .card p { color: var(--gray-text); margin: 0 0 12px; }
+
+  /* ─── Inputs ─── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    gap: 32px;
+  }
+  @media (max-width: 820px) { .two-col { grid-template-columns: 1fr; } }
+
+  label.field { display: block; margin-bottom: 14px; }
+  label.field > span {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .4px;
+    color: var(--navy-soft);
+    margin-bottom: 5px;
+    text-transform: uppercase;
+  }
+  label.field > .hint { display: block; font-size: 12px; font-weight: 400; color: var(--gray-text); margin-bottom: 6px; text-transform: none; letter-spacing: 0; }
+
+  input[type=text], input[type=number], textarea, select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--gray-line);
+    border-radius: 7px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--navy);
+    background: #fff;
+    transition: border-color .12s, box-shadow .12s;
+  }
+  input[type=text]:focus, input[type=number]:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px rgba(10,160,160,.15);
+  }
+  textarea { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace; font-size: 12.5px; resize: vertical; min-height: 110px; }
+
+  .row { display: flex; gap: 10px; align-items: center; }
+  .row > * { flex: 1; }
+  .row > .btn-secondary { flex: 0 0 auto; }
+
+  .btn {
+    display: inline-block;
+    padding: 10px 22px;
+    background: var(--teal);
+    color: #fff;
+    border: none;
+    border-radius: 24px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: .3px;
+    cursor: pointer;
+    transition: background .12s, transform .04s;
+  }
+  .btn:hover:not(:disabled) { background: var(--teal-dark); }
+  .btn:active:not(:disabled) { transform: translateY(1px); }
+  .btn:disabled { background: #B7C2CD; cursor: not-allowed; }
+  .btn-secondary {
+    background: transparent;
+    color: var(--navy-soft);
+    border: 1px solid var(--gray-line);
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .btn-secondary:hover { background: var(--gray-bg); color: var(--navy); }
+  .btn-large { font-size: 15px; padding: 12px 32px; }
+
+  details.advanced {
+    margin-top: 8px;
+    border-top: 1px dashed var(--gray-line);
+    padding-top: 14px;
+  }
+  details.advanced > summary {
+    cursor: pointer;
+    font-size: 12.5px;
+    color: var(--teal-dark);
+    font-weight: 600;
+    letter-spacing: .3px;
+    margin-bottom: 12px;
+  }
+
+  /* ─── Ecology table ─── */
+  table.eco {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  table.eco th, table.eco td {
+    padding: 6px 6px;
+    text-align: left;
+    border-bottom: 1px solid var(--gray-line);
+  }
+  table.eco th {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    color: var(--navy-soft);
+    font-weight: 600;
+  }
+  table.eco input[type=text] { padding: 4px 6px; font-size: 13px; }
+  table.eco input[type=color] {
+    width: 32px; height: 28px;
+    padding: 0;
+    border: 1px solid var(--gray-line);
+    border-radius: 5px;
+    cursor: pointer;
+    background: none;
+  }
+  table.eco td.x { width: 36px; text-align: center; }
+  table.eco button.del { background: none; border: none; color: var(--gray-text); cursor: pointer; font-size: 16px; }
+  table.eco button.del:hover { color: var(--coral); }
+  .add-row { margin-top: 8px; }
+
+  /* ─── Progress ─── */
+  .progress-wrap { margin-top: 14px; display: none; }
+  .progress-wrap.active { display: block; }
+  .progress-bar {
+    height: 8px;
+    background: var(--gray-line);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .progress-bar > div {
+    height: 100%;
+    background: linear-gradient(90deg, var(--teal), var(--teal-dark));
+    width: 0%;
+    transition: width .25s;
+  }
+  .progress-status {
+    font-size: 12.5px;
+    color: var(--gray-text);
+    margin-top: 8px;
+    font-family: ui-monospace, monospace;
+  }
+  .progress-status.error { color: var(--coral); }
+
+  /* ─── Results ─── */
+  .results { display: none; }
+  .results.active { display: block; }
+
+  .habitat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+    margin-top: 8px;
+  }
+  .habitat-card {
+    border: 1px solid var(--gray-line);
+    border-radius: 8px;
+    padding: 10px 12px;
+    background: #fff;
+  }
+  .habitat-card .hname {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--navy);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .habitat-card .swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    flex: 0 0 auto;
+  }
+  .habitat-card .bars { display: flex; height: 18px; border-radius: 3px; overflow: hidden; }
+  .habitat-card .bars > div { height: 100%; }
+  .habitat-card .legend { font-size: 10.5px; color: var(--gray-text); margin-top: 6px; line-height: 1.35; }
+
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 18px;
+    margin-bottom: 18px;
+  }
+  .stat-box { padding: 14px 16px; background: var(--gray-bg); border-radius: 8px; }
+  .stat-box .label {
+    font-size: 11px;
+    color: var(--navy-soft);
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    font-weight: 600;
+  }
+  .stat-box .value {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--navy);
+    margin-top: 4px;
+  }
+  .stat-box .value.small { font-size: 14px; font-family: ui-monospace, monospace; }
+
+  .download-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .download-grid .btn-dl {
+    padding: 10px 14px;
+    border: 1px solid var(--gray-line);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--navy);
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color .12s, background .12s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .download-grid .btn-dl:hover { border-color: var(--teal); background: rgba(10,160,160,0.04); }
+  .download-grid .btn-dl .fn { font-weight: 600; }
+  .download-grid .btn-dl .desc { font-size: 11.5px; color: var(--gray-text); }
+  .download-grid .btn-dl svg { flex: 0 0 auto; color: var(--teal); }
+
+  .zip-row { margin-top: 14px; }
+
+  /* ─── About / footer ─── */
+  .about ol { padding-left: 22px; }
+  .about ol li { margin-bottom: 6px; color: var(--gray-text); }
+  .about code {
+    background: var(--gray-bg);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 12.5px;
+  }
+
+  footer {
+    text-align: center;
+    padding: 28px 32px 40px;
+    font-size: 12.5px;
+    color: var(--gray-text);
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">AdaptML <span class="accent">·</span> SCELSE</div>
+  <nav>
+    <a href="#run">Run</a>
+    <a href="#about">About</a>
+    <a href="https://github.com/almlab/adaptml">Source</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <h1>Partition phylogenies by ecology.</h1>
+  <p class="sub">AdaptML jointly infers ecological populations and their projected habitats from a phylogenetic tree annotated with environmental sample metadata. Run the full analysis in your browser; export modern iTOL datasets to reproduce Figure 1 of Hunt&nbsp;et&nbsp;al. (2008).</p>
+  <p class="cite">Hunt DE, David LA, Gevers D, Preheim SP, Alm EJ, Polz MF.<br>
+    <em>Resource Partitioning and Sympatric Differentiation Among Closely Related Bacterioplankton.</em>
+    <a href="https://www.science.org/doi/10.1126/science.1157890" target="_blank" rel="noopener">Science 320, 1081 (2008)</a>.</p>
+  <svg class="motif" viewBox="0 0 320 280" aria-hidden="true">
+    <g stroke="#fff" stroke-width="1.2" fill="none" stroke-linecap="round">
+      <path d="M30,140 L130,140"/>
+      <path d="M130,80 L130,200"/>
+      <path d="M130,80 L210,40"/><path d="M130,80 L210,120"/>
+      <path d="M130,200 L210,160"/><path d="M130,200 L210,240"/>
+      <path d="M210,40 L280,20"/><path d="M210,40 L280,60"/>
+      <path d="M210,120 L280,100"/><path d="M210,120 L280,140"/>
+      <path d="M210,160 L280,160"/><path d="M210,160 L280,180"/>
+      <path d="M210,240 L280,220"/><path d="M210,240 L280,260"/>
+    </g>
+    <g fill="#fff">
+      <circle cx="130" cy="80" r="4"/>
+      <circle cx="130" cy="200" r="4"/>
+      <circle cx="210" cy="40" r="3.5"/>
+      <circle cx="210" cy="120" r="3.5"/>
+      <circle cx="210" cy="160" r="3.5"/>
+      <circle cx="210" cy="240" r="3.5"/>
+    </g>
+  </svg>
+</section>
+
+<main>
+
+  <!-- ─── INPUT ─── -->
+  <section class="card" id="run">
+    <h2><span class="step">1</span>Input</h2>
+    <div class="two-col">
+      <div>
+        <label class="field">
+          <span>Phylogenetic tree (Newick)</span>
+          <span class="hint">Leaf names must follow <code>EcologyID_SequenceID</code> (e.g. <code>ZS_210</code>, <code>FF_91</code>).</span>
+          <div class="row">
+            <input type="file" id="tree-file" accept=".tree,.nwk,.txt,.newick" style="font-size: 12px;">
+            <button class="btn-secondary" id="load-example">Load vibrio.hsp60.tree</button>
+          </div>
+          <textarea id="tree-text" placeholder="((LeafA:0.1,LeafB:0.1):0.2,(LeafC:0.1,LeafD:0.1):0.2,Outgroup:0.5);"></textarea>
+        </label>
+
+        <label class="field">
+          <span>Outgroup leaf name</span>
+          <input type="text" id="outgroup" value="5S_OUTGROUP">
+        </label>
+
+        <details class="advanced" open>
+          <summary>Advanced parameters</summary>
+          <label class="field">
+            <span>Initial habitats (<code>init_hab_num</code>)</span>
+            <input type="number" id="init-hab-num" value="16" min="2" max="64" step="1">
+          </label>
+          <label class="field">
+            <span>Habitat-merge threshold (<code>collapse_thresh</code>)</span>
+            <input type="number" id="collapse-thresh" value="0.10" min="0.001" max="0.5" step="0.01">
+          </label>
+          <label class="field">
+            <span>EM convergence threshold (<code>converge_thresh</code>)</span>
+            <input type="number" id="converge-thresh" value="0.001" min="0.0001" max="0.1" step="0.001">
+          </label>
+          <label class="field">
+            <span>Empirical significance percentile</span>
+            <span class="hint">0.9999 reproduces the paper's p&nbsp;&lt;&nbsp;0.0001; 0.95 is faster for exploration.</span>
+            <input type="number" id="thresh-p" value="0.9999" min="0.5" max="0.9999" step="0.01">
+          </label>
+          <label class="field">
+            <span>Randomization iterations</span>
+            <span class="hint">Used to build the empirical null. 1000 ≈ 60&nbsp;s on the vibrio dataset; 10000 ≈ 10&nbsp;min.</span>
+            <input type="number" id="rand-iters" value="10000" min="0" max="10000" step="100">
+          </label>
+          <label class="field">
+            <span>Random seed (optional)</span>
+            <input type="number" id="seed" value="2727" placeholder="leave blank for non-deterministic">
+          </label>
+        </details>
+      </div>
+
+      <div>
+        <h3 style="margin-top: 0;">Ecology mapping</h3>
+        <p style="font-size:12.5px;">For each position in the <code>EcologyID</code>, list its possible characters and pick a display color. iTOL will render one colored ring per position.</p>
+        <table class="eco" id="eco-table">
+          <thead>
+            <tr><th>Pos</th><th>Char</th><th>Label</th><th>Color</th><th></th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <button class="btn-secondary add-row" id="add-eco-row">+ Add row</button>
+      </div>
+    </div>
+
+    <div style="margin-top: 24px; display: flex; align-items: center; gap: 14px;">
+      <button class="btn btn-large" id="run-btn">Run AdaptML</button>
+      <span style="font-size: 12.5px; color: var(--gray-text);">All computation runs locally in your browser — no upload.</span>
+    </div>
+
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-bar"><div id="progress-bar-fill"></div></div>
+      <div class="progress-status" id="progress-status">Idle.</div>
+    </div>
+  </section>
+
+  <!-- ─── RESULTS ─── -->
+  <section class="card results" id="results">
+    <h2><span class="step">2</span>Results</h2>
+
+    <div class="stat-row">
+      <div class="stat-box"><div class="label">Habitats</div><div class="value" id="stat-habitats">—</div></div>
+      <div class="stat-box"><div class="label">Significant populations</div><div class="value" id="stat-clusters">—</div></div>
+      <div class="stat-box"><div class="label">Transition rate μ</div><div class="value small" id="stat-mu">—</div></div>
+      <div class="stat-box"><div class="label">Joint log-likelihood</div><div class="value small" id="stat-lik">—</div></div>
+    </div>
+
+    <h3>Inferred habitats</h3>
+    <div class="habitat-grid" id="habitat-grid"></div>
+
+    <h3>Downloads — drop these on <a href="https://itol.embl.de/upload.cgi" target="_blank" rel="noopener">itol.embl.de</a></h3>
+    <div class="download-grid" id="download-grid"></div>
+    <div class="zip-row">
+      <button class="btn" id="download-zip">Download all (.zip)</button>
+    </div>
+  </section>
+
+  <!-- ─── ABOUT ─── -->
+  <section class="card about" id="about">
+    <h2><span class="step">i</span>About this analysis</h2>
+    <p>AdaptML builds a hidden Markov model on the phylogeny, treating habitat at each node as a latent state. An EM loop simultaneously (a) infers each habitat's emission distribution over the observed environmental categories and (b) updates the transition rate μ.</p>
+    <p>After convergence, a joint (Viterbi-style) assignment maps a single best habitat to every ancestral node. Subtrees rooted at habitat-transition nodes are then tested for significance against an empirical null produced by shuffling the leaf-environment labels.</p>
+
+    <h3>How to recreate Figure 1 of Hunt et al. (2008)</h3>
+    <ol>
+      <li>Click <strong>Load vibrio.hsp60.tree</strong>. The ecology table fills with the paper's color scheme (size fraction Z/5/1/F, season S/F).</li>
+      <li>Leave defaults at <code>init_hab_num&nbsp;=&nbsp;16</code>, <code>collapse_thresh&nbsp;=&nbsp;0.10</code>, <code>converge_thresh&nbsp;=&nbsp;0.001</code>. Bump <em>Empirical significance percentile</em> to <code>0.9999</code> and <em>Randomization iterations</em> to <code>10000</code> for publication-grade significance.</li>
+      <li>Click <strong>Run AdaptML</strong>. Watch the progress bar.</li>
+      <li>Click <strong>Download all (.zip)</strong>. Unzip locally.</li>
+      <li>At <a href="https://itol.embl.de/upload.cgi" target="_blank" rel="noopener">itol.embl.de</a>, upload <code>tree.nwk</code>. Then drag-and-drop each <code>dataset_*.txt</code> onto the iTOL canvas.</li>
+    </ol>
+
+    <h3>Algorithmic defaults</h3>
+    <p>All defaults match the original AdaptML code by Lawrence David (Alm Lab, MIT). The empirical p-value of 0.9999 plus 90&nbsp;% subtree-coherence cutoff reproduces the alternating blue/gray banding from the paper.</p>
+  </section>
+
+</main>
+
+<footer>
+  AdaptML · SCELSE port · ©&nbsp;2026.
+  Original code <a href="https://github.com/almlab/adaptml" target="_blank" rel="noopener">almlab/adaptml</a> by Lawrence David.
+</footer>
+
+<script>
+//═══════════════════════════════════════════════════════════════════════════
+// AdaptML — pure JavaScript port
+//═══════════════════════════════════════════════════════════════════════════
+//
+// Algorithm: faithful port of habitats/trunk/AdaptML.py + clusters/trunk/JointML.py
+// + clusters/getstats/rand_JointML.py + GetLikelihoods.py.
+//
+// Outputs: tree.nwk (rooted Newick with internal node IDs), modern iTOL datasets
+// (DATASET_COLORSTRIP per ecology position, DATASET_SYMBOLS for habitat circles,
+// DATASET_COLORSTRIP for the significant-cluster banding), habitats.json,
+// populations.tsv, stats.tsv, and a README.txt with iTOL instructions.
+
+//─── Seedable RNG (mulberry32) ─────────────────────────────────────────────
+function makeRng(seed) {
+  let s = (seed >>> 0) || (Math.random() * 0xffffffff) >>> 0;
+  return function() {
+    s = (s + 0x6D2B79F5) >>> 0;
+    let t = s;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+//─── Newick parser → unrooted tree ────────────────────────────────────────
+function speciesOf(name) {
+  // strip everything from the first '.' or '_' onward
+  const m = name.match(/^([^._]+)/);
+  return m ? m[0] : name;
+}
+
+let _NODE_ID = 0;
+function newNode(name) {
+  return {
+    id: _NODE_ID++,
+    name,
+    species: speciesOf(name),
+    perturb_species: speciesOf(name),
+    branches: [],          // list of branches (edges) incident to this node
+    isLeaf: false,
+    // ML scratch
+    ML_probs: new Map(),   // Map<neighborNode, {[habitat]: logProb}>
+    ML_path:  new Map(),   // Map<neighborNode, {[habitat]: bestKidHabitat}>
+    ML_state: null,        // {[habitat]: marginalProb}  OR  {[habitat]: bool} for Viterbi
+    sum_lik: 0,
+    // rooted-tree scratch
+    parent: null,
+    children: null,
+    leaf_nodes: null,      // descendant leaves (after rootify)
+    // habitat assignment (joint)
+    habitat: null,
+    likelihood: null,
+    threshold: null,
+    // cluster
+    cluster_root: false,
+    div_tested: false,
+    divergers: null,
+  };
+}
+function newBranch(length) {
+  return { length: Math.max(length, 0), immutable_length: Math.max(length, 0), ends: [] };
+}
+function attach(node, branch) {
+  branch.ends.push(node);
+  node.branches.push(branch);
+}
+
+// Tokeniser-style Newick parser. Produces an unrooted tree (returns an
+// arbitrary internal node + the tree object).
+function parseNewick(s) {
+  s = s.replace(/\s+/g, '');
+  // strip bootstraps of the form )NNN:  -> ):
+  s = s.replace(/\)[\d.]+:/g, '):');
+  if (!s.endsWith(';')) throw new Error('Newick must end with ;');
+  s = s.slice(0, -1);
+  let i = 0;
+  function parseSubtree() {
+    if (s[i] !== '(') return parseLeaf();
+    i++; // consume '('
+    const children = [parseSubtree()];
+    while (s[i] === ',') { i++; children.push(parseSubtree()); }
+    if (s[i] !== ')') throw new Error('expected ) at pos ' + i);
+    i++;
+    // optional internal label (bootstrap or name) then optional :length
+    let label = '';
+    while (i < s.length && s[i] !== ':' && s[i] !== ',' && s[i] !== ')' && s[i] !== ';') {
+      label += s[i++];
+    }
+    let length = 0;
+    if (s[i] === ':') {
+      i++;
+      let n = '';
+      while (i < s.length && /[\d.eE+-]/.test(s[i])) n += s[i++];
+      length = parseFloat(n);
+    }
+    return { children, label, length };
+  }
+  function parseLeaf() {
+    let name = '';
+    while (i < s.length && s[i] !== ':' && s[i] !== ',' && s[i] !== ')') name += s[i++];
+    let length = 0;
+    if (s[i] === ':') {
+      i++;
+      let n = '';
+      while (i < s.length && /[\d.eE+-]/.test(s[i])) n += s[i++];
+      length = parseFloat(n);
+    }
+    return { name, length };
+  }
+
+  _NODE_ID = 0;
+  const root = parseSubtree();
+  // Convert parsed AST → node/branch graph. Treat the parser's tree as rooted-but-arbitrary;
+  // we won't trust that root yet — the resulting graph is still topologically the unrooted tree.
+  const allNodes = [];
+  const allLeaves = [];
+
+  function build(astNode, parentBranch) {
+    let n;
+    if (astNode.children) {
+      n = newNode(astNode.label || '');
+      n.isLeaf = false;
+    } else {
+      n = newNode(astNode.name);
+      n.isLeaf = true;
+      allLeaves.push(n);
+    }
+    allNodes.push(n);
+    if (parentBranch) attach(n, parentBranch);
+    if (astNode.children) {
+      for (const c of astNode.children) {
+        const b = newBranch(c.length);
+        attach(n, b);
+        build(c, b);
+      }
+    }
+    return n;
+  }
+
+  // Build from the parsed AST without creating an extra "root" node when the AST root
+  // has >=3 children (truly unrooted Newick).
+  let entryNode;
+  if (root.children && root.children.length >= 3) {
+    entryNode = newNode('__entry__');
+    entryNode.isLeaf = false;
+    allNodes.push(entryNode);
+    for (const c of root.children) {
+      const b = newBranch(c.length);
+      attach(entryNode, b);
+      build(c, b);
+    }
+  } else {
+    entryNode = build(root, null);
+  }
+
+  return { entry: entryNode, allNodes, allLeaves };
+}
+
+//─── Per-direction leaf annotation (UnrootedLeaving equivalent) ─────────
+// At each internal node, for each incident branch direction, compute the
+// set of leaf-species reachable through that branch. Used to find the
+// outgroup branch.
+function annotateUnrooted(tree) {
+  for (const n of tree.allNodes) n._leafByNeighbor = new Map();
+
+  function leavesThrough(node, fromBranch) {
+    const neighbor = otherEnd(fromBranch, node);
+    if (node._leafByNeighbor.has(neighbor)) return node._leafByNeighbor.get(neighbor);
+    if (node.isLeaf) {
+      const rec = { species: [node.species], names: [node.name] };
+      node._leafByNeighbor.set(neighbor, rec);
+      return rec;
+    }
+    // gather across all OTHER branches
+    const species = [];
+    const names = [];
+    for (const b of node.branches) {
+      if (b === fromBranch) continue;
+      const child = otherEnd(b, node);
+      const r = leavesThrough(child, b);
+      // Wait: from child's perspective, the branch we came from is b — we want leaves on child's side.
+    }
+    // The recursion above is wrong; rewrite iteratively below.
+  }
+
+  // Simpler approach: do a 2-pass tree traversal rooted at any node.
+  // Pick a leaf as a temporary root. For each branch direction, leaves-through(node, branch) =
+  // union of leaves-through(neighbor, branch') for all branch' != branch incident to neighbor.
+  // Use memoization via a map keyed by branch + direction.
+  const memo = new Map(); // key "branchIdx|nodeId" -> {species[], names[]}
+
+  function key(branch, towardNode) {
+    return branch._idx + '|' + towardNode.id;
+  }
+  // Assign each branch an index
+  let bi = 0;
+  const allBranches = [];
+  for (const n of tree.allNodes) {
+    for (const b of n.branches) {
+      if (b._idx === undefined) { b._idx = bi++; allBranches.push(b); }
+    }
+  }
+
+  // leavesAcross(fromNode, throughBranch) = set of leaves reachable by going from fromNode along throughBranch and beyond.
+  function leavesAcross(fromNode, throughBranch) {
+    const toNode = otherEnd(throughBranch, fromNode);
+    const k = key(throughBranch, toNode);
+    if (memo.has(k)) return memo.get(k);
+    if (toNode.isLeaf) {
+      const rec = { species: [toNode.species], names: [toNode.name] };
+      memo.set(k, rec);
+      return rec;
+    }
+    const species = [];
+    const names = [];
+    for (const b of toNode.branches) {
+      if (b === throughBranch) continue;
+      const r = leavesAcross(toNode, b);
+      species.push(...r.species);
+      names.push(...r.names);
+    }
+    species.sort();
+    names.sort();
+    const rec = { species, names };
+    memo.set(k, rec);
+    return rec;
+  }
+
+  // For every node, for every neighbor (incident branch direction), store the leaf set on the OTHER side.
+  for (const n of tree.allNodes) {
+    for (const b of n.branches) {
+      const r = leavesAcross(n, b);
+      // n._leafByNeighbor maps neighbor -> leaves through that neighbor (i.e. on the other side of b)
+      const neighbor = otherEnd(b, n);
+      n._leafByNeighbor.set(neighbor, r);
+    }
+  }
+
+  // species_count: how many leaves per species
+  const species_count = {};
+  for (const l of tree.allLeaves) {
+    species_count[l.species] = (species_count[l.species] || 0) + 1;
+  }
+  tree.species_count = species_count;
+  tree.allBranches = allBranches;
+
+  return tree;
+}
+
+function otherEnd(branch, node) {
+  return branch.ends[0] === node ? branch.ends[1] : branch.ends[0];
+}
+
+//─── Rootify: find the outgroup branch, midpoint-root it ──────────────────
+function rootify(tree, outgroupName) {
+  // Find branch where the leaf-name set on one side is exactly [outgroupName].
+  let outBranch = null;
+  let outDir = null; // which end of the branch is the outgroup-side
+  for (const b of tree.allBranches) {
+    for (const end of b.ends) {
+      const neighbor = otherEnd(b, end);
+      const names = neighbor._leafByNeighbor.get(end).names;
+      if (names.length === 1 && names[0] === outgroupName) {
+        outBranch = b;
+        outDir = neighbor; // the outgroup leaf side
+        break;
+      }
+    }
+    if (outBranch) break;
+  }
+  if (!outBranch) throw new Error(`Outgroup '${outgroupName}' not found as a single-leaf branch.`);
+
+  // Insert a new root node mid-branch.
+  const root = newNode('__root__');
+  tree.allNodes.push(root);
+  const a = outBranch.ends[0];
+  const b = outBranch.ends[1];
+  // remove outBranch from a.branches and b.branches
+  a.branches = a.branches.filter(x => x !== outBranch);
+  b.branches = b.branches.filter(x => x !== outBranch);
+  // index of outBranch
+  const obi = tree.allBranches.indexOf(outBranch);
+  if (obi >= 0) tree.allBranches.splice(obi, 1);
+
+  // midpoint distance from leaf to each side (very approximate — just halve)
+  const half = outBranch.length / 2;
+  const ba = newBranch(half); attach(root, ba); attach(a, ba); ba._idx = tree.allBranches.length; tree.allBranches.push(ba);
+  const bb = newBranch(half); attach(root, bb); attach(b, bb); bb._idx = tree.allBranches.length; tree.allBranches.push(bb);
+
+  // Establish parent/child relationships from root
+  function imposeHierarchy(n, parent) {
+    n.parent = parent;
+    n.children = [];
+    for (const br of n.branches) {
+      const nb = otherEnd(br, n);
+      if (nb === parent) continue;
+      n.children.push(nb);
+      imposeHierarchy(nb, n);
+    }
+  }
+  imposeHierarchy(root, null);
+  tree.root = root;
+
+  // The "true root" = root's non-outgroup child (so that the outgroup hangs off as a single leaf).
+  let trueRoot = null;
+  for (const c of root.children) {
+    if (c.name !== outgroupName) trueRoot = c;
+  }
+  if (!trueRoot) throw new Error('outgroup is not directly under the new root');
+  tree.trueRoot = trueRoot;
+
+  // Build leaf_nodes list (post-order) for each rooted subtree under trueRoot.
+  function collectLeaves(n) {
+    if (n.isLeaf) { n.leaf_nodes = [n]; return [n]; }
+    n.leaf_nodes = [];
+    for (const c of n.children) n.leaf_nodes.push(...collectLeaves(c));
+    return n.leaf_nodes;
+  }
+  collectLeaves(trueRoot);
+
+  return tree;
+}
+
+//─── Likelihoods (sum-then-log) for habitat learning ─────────────────────
+// MLNode(node, kid, mu, M) computes node.ML_probs[kid][habitat] = log-likelihood
+// of the subtree rooted at kid (away from node), conditioned on node being in `habitat`.
+function MLNode_habitats(thisNode, kidNode, mu, M, habitats) {
+  if (thisNode.ML_probs.has(kidNode)) return;
+  const out = {};
+  thisNode.ML_probs.set(kidNode, out);
+  if (kidNode === null) {
+    const f = thisNode.species;
+    for (const h of habitats) out[h] = Math.log(M[h][f]);
+    return;
+  }
+  // child_nodes = kid's other neighbors (away from thisNode)
+  let childNodes = [];
+  for (const b of kidNode.branches) {
+    const nb = otherEnd(b, kidNode);
+    if (nb !== thisNode) childNodes.push(nb);
+  }
+  if (childNodes.length === 0) childNodes = [null, null];
+  if (childNodes.length === 1) childNodes.push(null);
+
+  MLNode_habitats(kidNode, childNodes[0], mu, M, habitats);
+  MLNode_habitats(kidNode, childNodes[1], mu, M, habitats);
+
+  // branch length between thisNode and kidNode
+  let t = 0;
+  for (const b of thisNode.branches) {
+    if (b.ends[0] === kidNode || b.ends[1] === kidNode) { t = b.length; break; }
+  }
+  const h = habitats.length;
+  const e = Math.exp(-h * mu * t);
+  const p_xx = 1.0 / h + (h - 1) / h * e;
+  const p_xy = 1.0 / h * (1 - e);
+
+  for (const thisH of habitats) {
+    let sumProb = Math.exp(-500);
+    for (const kidH of habitats) {
+      const trans = thisH === kidH ? p_xx : p_xy;
+      let prob = Math.log(trans);
+      if (childNodes[0] === null && childNodes[1] === null) {
+        prob += kidNode.ML_probs.get(null)[kidH];
+      } else {
+        prob += kidNode.ML_probs.get(childNodes[0])[kidH];
+        prob += kidNode.ML_probs.get(childNodes[1])[kidH];
+      }
+      sumProb += Math.exp(prob);
+    }
+    out[thisH] = Math.log(sumProb);
+  }
+}
+
+function learnLiks_habitats(tree, mu, M, habitats) {
+  // For each internal node, for each incident neighbor, compute ML_probs.
+  // Iterate by post-order so dependencies are filled.
+  // Use the entryNode as the recursion seed (we just need any internal node).
+  const internals = tree.allNodes.filter(n => !n.isLeaf);
+  for (const n of internals) {
+    for (const b of n.branches) {
+      const nb = otherEnd(b, n);
+      MLNode_habitats(n, nb, mu, M, habitats);
+    }
+  }
+}
+
+function estimateStates(node, M, habitats, visited) {
+  visited = visited || new Set();
+  if (visited.has(node)) return;
+  visited.add(node);
+  if (node.ML_probs.size === 1) {
+    // leaf: state = emission prob for its species (normalized)
+    const f = node.species;
+    const s = {};
+    let total = 0;
+    for (const h of habitats) { s[h] = M[h][f]; total += s[h]; }
+    for (const h of habitats) s[h] /= total;
+    node.ML_state = s;
+  } else {
+    const states = {};
+    for (const h of habitats) states[h] = 0;
+    for (const [kid, probs] of node.ML_probs) {
+      for (const h of habitats) states[h] += probs[h];
+    }
+    // softmax
+    let sumProb = 0;
+    for (const h of habitats) sumProb += Math.exp(states[h]);
+    const minFloat = Math.exp(-745);
+    if (sumProb < minFloat) sumProb = minFloat;
+    node.sum_lik = sumProb;
+    const s = {};
+    for (const h of habitats) s[h] = Math.exp(states[h]) / sumProb;
+    node.ML_state = s;
+  }
+  // recurse to neighbors
+  for (const b of node.branches) {
+    const nb = otherEnd(b, node);
+    if (!visited.has(nb)) estimateStates(nb, M, habitats, visited);
+  }
+}
+
+function learnMR(tree, M, mu, habitats, filters) {
+  // For each habitat, accumulate weighted contributions from each leaf.
+  // For each leaf with its parent's state, compute p_xy or p_xx and weight.
+  const newM = {};
+  for (const h of habitats) {
+    newM[h] = {};
+    for (const f of filters) newM[h][f] = Math.exp(-24);
+  }
+  const hn = habitats.length;
+  for (const leaf of tree.allLeaves) {
+    // find parent node and branch length
+    let parent = null, t = 0;
+    const b = leaf.branches[0];
+    parent = otherEnd(b, leaf);
+    t = b.length;
+    const e = Math.exp(-hn * mu * t);
+    const p_xx = 1.0 / hn + (hn - 1) / hn * e;
+    const p_xy = 1.0 / hn * (1 - e);
+    const f = leaf.species;
+    for (const ph of habitats) {
+      const pState = parent.ML_state[ph];
+      for (const lh of habitats) {
+        const tp = (ph === lh) ? p_xx : p_xy;
+        newM[lh][f] += tp * pState;
+      }
+    }
+  }
+  // normalize per habitat
+  for (const h of habitats) {
+    let scale = 0;
+    for (const f of filters) scale += newM[h][f];
+    for (const f of filters) newM[h][f] /= scale;
+  }
+  return newM;
+}
+
+function nodeRate(tree, habitats) {
+  // empirical estimate: for each internal-internal branch, compare max ML_state habitats.
+  let sameCount = 0;
+  let totalDist = 0;
+  let counter = 0;
+  for (const b of tree.allBranches) {
+    const a = b.ends[0], c = b.ends[1];
+    if (a.isLeaf || c.isLeaf) continue;
+    if (!a.ML_state || !c.ML_state) continue;
+    let mxA = -1, mxAst = null, mxC = -1, mxCst = null;
+    for (const h of habitats) {
+      if (a.ML_state[h] > mxA) { mxA = a.ML_state[h]; mxAst = h; }
+      if (c.ML_state[h] > mxC) { mxC = c.ML_state[h]; mxCst = h; }
+    }
+    if (mxAst === mxCst) sameCount++;
+    counter++;
+    totalDist += b.length;
+  }
+  if (counter === 0) return 0.1;
+  const hn = habitats.length;
+  const t = totalDist / counter;
+  const dist = 1 - sameCount / counter;
+  let inner = 1 - dist * hn / (hn - 1);
+  if (inner <= 0) inner = Math.exp(-10);
+  return -Math.log(inner) / (hn * t);
+}
+
+function checkConverge(tree, newM, oldM, habitats, filters) {
+  // mean abs diff
+  let diff = 0;
+  for (const h of habitats) {
+    for (const f of filters) {
+      diff += Math.abs(newM[h][f] - oldM[h][f]);
+    }
+  }
+  diff /= habitats.length * filters.length;
+  // total_prob (log-likelihood proxy)
+  let totalProb = 0, internalCount = 0, neighborTotal = 0;
+  for (const n of tree.allNodes) {
+    if (n.isLeaf) continue;
+    internalCount++;
+    let cnt = 0;
+    for (const [kid, p] of n.ML_probs) {
+      for (const h of habitats) totalProb += p[h];
+      cnt++;
+    }
+    neighborTotal = cnt;
+  }
+  if (internalCount && neighborTotal) totalProb /= internalCount * neighborTotal;
+  return { totalProb, diff };
+}
+
+function treeWipe(tree) {
+  for (const n of tree.allNodes) {
+    n.ML_probs = new Map();
+    n.ML_path = new Map();
+    n.ML_state = null;
+  }
+}
+
+//─── Habitat learning EM ──────────────────────────────────────────────────
+function adaptML(tree, opts, progress) {
+  const { init_hab_num, collapse_thresh, converge_thresh, rateopt, rng } = opts;
+  const filters = Object.keys(tree.species_count);
+  let habitats = [];
+  let M = {};
+  for (let i = 0; i < init_hab_num; i++) {
+    const h = 'habitat ' + i;
+    habitats.push(h);
+    const dist = {};
+    let scale = 0;
+    for (const f of filters) { dist[f] = rng(); scale += dist[f]; }
+    for (const f of filters) dist[f] /= scale;
+    M[h] = dist;
+  }
+  let mu = 1.00000000001;
+  const stats = [];
+
+  let outerIter = 0;
+  while (true) {
+    let counter = 0;
+    let diff = 1.0;
+    let oldDiff = 1.0;
+    let score = -9999.99999999;
+    while (true) {
+      stats.push({ outer: outerIter, counter, habs: habitats.length, score, mu, diff });
+      progress({ phase: 'em', outerIter, counter, habs: habitats.length, diff, mu });
+      treeWipe(tree);
+      learnLiks_habitats(tree, mu, M, habitats);
+      // seed estimateStates from any internal node
+      const seed = tree.allNodes.find(n => !n.isLeaf);
+      estimateStates(seed, M, habitats);
+      // M-step
+      const newM = learnMR(tree, M, mu, habitats, filters);
+      const newMu = nodeRate(tree, habitats);
+      const cc = checkConverge(tree, newM, M, habitats, filters);
+      score = cc.totalProb;
+      oldDiff = diff;
+      diff = cc.diff;
+      M = newM;
+      mu = newMu;
+      if (diff < converge_thresh) break;
+      // oscillation guard
+      const d1 = Math.floor(diff * 1e8);
+      const d2 = Math.floor(oldDiff * 1e8);
+      if (d1 > 0 && d1 === d2) break;
+      if (counter > 500) break;
+      counter++;
+    }
+    // collapse similar habitats by sum-of-squared-diff < collapse_thresh
+    const kept = {};
+    const keptOrder = [];
+    for (const h1 of habitats) {
+      let add = true;
+      for (const h2 of keptOrder) {
+        let s = 0;
+        for (const f of filters) { const d = M[h1][f] - kept[h2][f]; s += d * d; }
+        if (s < collapse_thresh) { add = false; break; }
+      }
+      if (add) { kept[h1] = M[h1]; keptOrder.push(h1); }
+    }
+    if (keptOrder.length === habitats.length) break;
+    habitats = keptOrder;
+    M = kept;
+    if (habitats.length < 2) break;
+    outerIter++;
+  }
+  return { habitats, M, mu, stats };
+}
+
+//─── Joint Viterbi assignment (after rootify) ─────────────────────────────
+// log-likelihood at each rooted node, using max instead of sum, with ML_path
+// for backtracking.
+function MLNode_joint(thisNode, kidNode, mu, M, habitats) {
+  if (thisNode.ML_probs.has(kidNode)) return;
+  const out = {};
+  const path = {};
+  thisNode.ML_probs.set(kidNode, out);
+  thisNode.ML_path.set(kidNode, path);
+  if (kidNode === null) {
+    const f = thisNode.species;
+    for (const h of habitats) out[h] = Math.log(M[h][f]);
+    return;
+  }
+  // child = kid's "other side" neighbors. In rooted form, that's kid's children (not the parent === thisNode).
+  let childNodes = (kidNode.children || []).filter(c => c !== thisNode);
+  if (childNodes.length === 0) childNodes = [null, null];
+  if (childNodes.length === 1) childNodes.push(null);
+
+  MLNode_joint(kidNode, childNodes[0], mu, M, habitats);
+  MLNode_joint(kidNode, childNodes[1], mu, M, habitats);
+
+  let t = 0;
+  for (const b of thisNode.branches) {
+    if (b.ends[0] === kidNode || b.ends[1] === kidNode) { t = b.length; break; }
+  }
+  const hn = habitats.length;
+  const e = Math.exp(-hn * mu * t);
+  const p_xx = 1.0 / hn + (hn - 1) / hn * e;
+  const p_xy = 1.0 / hn * (1 - e);
+
+  for (const thisH of habitats) {
+    let high = -Infinity, maxHab = null;
+    for (const kidH of habitats) {
+      const trans = thisH === kidH ? p_xx : p_xy;
+      let prob = Math.log(trans);
+      if (childNodes[0] === null && childNodes[1] === null) {
+        prob += kidNode.ML_probs.get(null)[kidH];
+      } else {
+        prob += kidNode.ML_probs.get(childNodes[0])[kidH];
+        prob += kidNode.ML_probs.get(childNodes[1])[kidH];
+      }
+      if (prob > high) { high = prob; maxHab = kidH; }
+    }
+    out[thisH] = high;
+    path[thisH] = maxHab;
+  }
+}
+
+function jointML(tree, M, mu, habitats) {
+  treeWipe(tree);
+  const trueRoot = tree.trueRoot;
+  for (const kid of trueRoot.children) {
+    MLNode_joint(trueRoot, kid, mu, M, habitats);
+  }
+  // pick best habitat at trueRoot
+  const scores = {};
+  for (const h of habitats) scores[h] = 0;
+  for (const kid of trueRoot.children) {
+    const probs = trueRoot.ML_probs.get(kid);
+    for (const h of habitats) scores[h] += probs[h];
+  }
+  let best = -Infinity, bestH = null;
+  for (const h of habitats) if (scores[h] > best) { best = scores[h]; bestH = h; }
+
+  function assign(node, maxHab) {
+    const state = {};
+    for (const h of habitats) state[h] = (h === maxHab);
+    node.ML_state = state;
+    node.habitat = maxHab;
+    if (!node.children || node.children.length === 0) return;
+    for (const kid of node.children) {
+      const kh = node.ML_path.get(kid)[maxHab];
+      assign(kid, kh);
+    }
+  }
+  assign(trueRoot, bestH);
+
+  // joint likelihood at each node = sum over child kids of ML_probs[kid][nodeHabitat]
+  function setLik(n) {
+    if (!n.children || n.children.length === 0) return;
+    let l = 0;
+    for (const c of n.children) {
+      l += n.ML_probs.get(c)[n.habitat];
+    }
+    n.likelihood = l;
+    for (const c of n.children) setLik(c);
+  }
+  setLik(trueRoot);
+
+  return best;
+}
+
+//─── Empirical thresholds via leaf-label shuffling ────────────────────────
+// For each random iter, shuffle leaf perturb_species, then constrained-Viterbi:
+// each node's habitat is FIXED (set by jointML on the real data), we only recompute
+// the joint log-likelihood given the shuffled emissions.
+function MLShuffle(thisNode, kidNode, mu, M, habitats) {
+  if (thisNode.ML_probs.has(kidNode)) return;
+  const out = {};
+  thisNode.ML_probs.set(kidNode, out);
+  const trueH = thisNode.habitat;
+  if (kidNode === null) {
+    const f = thisNode.perturb_species;
+    out[trueH] = Math.log(M[trueH][f]);
+    return;
+  }
+  let childNodes = (kidNode.children || []).filter(c => c !== thisNode);
+  if (childNodes.length === 0) childNodes = [null, null];
+  if (childNodes.length === 1) childNodes.push(null);
+  MLShuffle(kidNode, childNodes[0], mu, M, habitats);
+  MLShuffle(kidNode, childNodes[1], mu, M, habitats);
+
+  let t = 0;
+  for (const b of thisNode.branches) {
+    if (b.ends[0] === kidNode || b.ends[1] === kidNode) { t = b.length; break; }
+  }
+  const hn = habitats.length;
+  const e = Math.exp(-hn * mu * t);
+  const p_xx = 1.0 / hn + (hn - 1) / hn * e;
+  const p_xy = 1.0 / hn * (1 - e);
+  const kidH = kidNode.habitat;
+  let prob = (trueH === kidH) ? Math.log(p_xx) : Math.log(p_xy);
+  if (childNodes[0] === null && childNodes[1] === null) {
+    prob += kidNode.ML_probs.get(null)[kidH];
+  } else {
+    prob += kidNode.ML_probs.get(childNodes[0])[kidH];
+    prob += kidNode.ML_probs.get(childNodes[1])[kidH];
+  }
+  out[trueH] = prob;
+}
+
+function shuffleLeaves(tree, rng) {
+  const leaves = tree.allLeaves;
+  const speciesList = leaves.map(l => l.species);
+  // Fisher-Yates
+  for (let i = speciesList.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [speciesList[i], speciesList[j]] = [speciesList[j], speciesList[i]];
+  }
+  for (let i = 0; i < leaves.length; i++) leaves[i].perturb_species = speciesList[i];
+}
+
+// For each internal node, identify it by the two "first leaves" of its child subtrees
+// (matches the legacy GetALeaf(0)/GetALeaf(1) keying).
+function firstLeaf(node, side) {
+  if (node.isLeaf) return node;
+  return firstLeaf(node.children[side], side);
+}
+function pairKey(node) {
+  if (!node.children || node.children.length < 2) return null;
+  const l1 = firstLeaf(node.children[0], 0).name;
+  const l2 = firstLeaf(node.children[1], 1).name;
+  return l1 + ' ' + l2;
+}
+
+function runRandomizations(tree, M, mu, habitats, iters, threshP, rng, progress) {
+  const trueRoot = tree.trueRoot;
+  // collect every internal node (under trueRoot) that has 2+ children
+  const internalNodes = [];
+  function collect(n) {
+    if (!n.children || n.children.length < 2) return;
+    internalNodes.push(n);
+    for (const c of n.children) collect(c);
+  }
+  collect(trueRoot);
+
+  // empirical likelihoods per node, keyed by pairKey
+  const liks = new Map();
+  for (const n of internalNodes) liks.set(pairKey(n), []);
+
+  for (let it = 0; it < iters; it++) {
+    treeWipe(tree);
+    shuffleLeaves(tree, rng);
+    for (const kid of trueRoot.children) MLShuffle(trueRoot, kid, mu, M, habitats);
+    // for each internal node, joint log-lik for its assigned habitat
+    for (const n of internalNodes) {
+      let l = 0;
+      for (const c of n.children) {
+        l += n.ML_probs.get(c)[n.habitat];
+      }
+      liks.get(pairKey(n)).push(l);
+    }
+    if ((it & 31) === 0) progress({ phase: 'rand', it, iters });
+  }
+
+  // percentile threshold per node
+  const thresholds = new Map();
+  for (const [k, arr] of liks) {
+    arr.sort((a, b) => a - b);
+    const idx = Math.min(arr.length - 1, Math.max(0, Math.floor(arr.length * threshP)));
+    thresholds.set(k, arr[idx]);
+  }
+  return thresholds;
+}
+
+//─── Cluster identification ──────────────────────────────────────────────
+function findClusters(tree, thresholds, habitats) {
+  const trueRoot = tree.trueRoot;
+  // assign threshold per internal node
+  function setThresh(n) {
+    if (!n.children || n.children.length === 0) { n.threshold = 0; return; }
+    n.threshold = thresholds.get(pairKey(n)) || -Infinity;
+    for (const c of n.children) setThresh(c);
+  }
+  setThresh(trueRoot);
+
+  // Find divergence points: child.habitat !== node.habitat
+  // Then descend; if subtree is ≥90% homogeneous AND likelihood > threshold,
+  // mark as cluster_root. Otherwise descend further.
+  const clusters = [];
+
+  function tryCluster(node) {
+    if (!node.children || node.children.length === 0) return;
+    // homogeneity
+    let same = 0;
+    for (const leaf of node.leaf_nodes) {
+      // joint Viterbi already wrote ML_state[h]=bool per node, but only for trueRoot subtree.
+      // Leaf habitats are determined by the joint assignment too.
+      if (leaf.habitat === node.habitat) same++;
+    }
+    const frac = same / node.leaf_nodes.length;
+    let isCluster = false;
+    if (frac > 0.9) {
+      if (node.likelihood > node.threshold) isCluster = true;
+    }
+    if (isCluster) {
+      // Guard against the same node being added twice — happens because
+      // trueRoot.parent (the synthetic outgroup root) has no habitat,
+      // so trueRoot looks like a divergence point AND gets the explicit pass.
+      if (!node.cluster_root) {
+        node.cluster_root = true;
+        clusters.push(node);
+      }
+    } else {
+      for (const c of node.children) {
+        if (c.habitat === node.habitat) tryCluster(c);
+      }
+    }
+  }
+
+  // For every divergence point (post-order), recurse with tryCluster.
+  // Skip trueRoot here — its parent is the synthetic root, which would
+  // misfire as a divergence point. trueRoot is handled by the explicit pass below.
+  function findDivergence(n) {
+    if (!n.children || n.children.length === 0) return;
+    for (const c of n.children) findDivergence(c);
+    if (n !== trueRoot && n.parent && n.habitat !== n.parent.habitat) {
+      tryCluster(n);
+    }
+  }
+  findDivergence(trueRoot);
+  if (!clusters.includes(trueRoot)) tryCluster(trueRoot);
+
+  return clusters;
+}
+
+//─── Output writers ──────────────────────────────────────────────────────
+// Assign each internal node a unique ID (N00001…) for the rooted Newick.
+function assignInternalIds(tree) {
+  let i = 1;
+  function recur(n) {
+    if (n.isLeaf) return;
+    n.internalId = 'N' + String(i++).padStart(5, '0');
+    if (n.children) for (const c of n.children) recur(c);
+  }
+  recur(tree.trueRoot);
+}
+
+function writeNewick(tree) {
+  function rec(n) {
+    if (n.isLeaf) {
+      const len = n.parent ? branchBetween(n, n.parent).length : 0;
+      return n.name + ':' + len.toFixed(6);
+    }
+    const inner = n.children.map(rec).join(',');
+    const id = n.internalId || '';
+    const len = n.parent ? branchBetween(n, n.parent).length : 0;
+    return '(' + inner + ')' + id + ':' + len.toFixed(6);
+  }
+  function branchBetween(a, b) {
+    for (const br of a.branches) {
+      if (br.ends[0] === b || br.ends[1] === b) return br;
+    }
+    return { length: 0 };
+  }
+  return rec(tree.trueRoot) + ';';
+}
+
+function rgbToHex(r, g, b) {
+  const c = v => v.toString(16).padStart(2, '0');
+  return '#' + c(r) + c(g) + c(b);
+}
+
+// Build a palette for habitats — distinct hues, in order.
+function habitatColors(habitats) {
+  // base palette mimicking Hunt et al. Fig 1B; for >6 habitats interpolate.
+  const seed = [
+    [231, 76, 60],     // red
+    [46, 204, 113],    // green
+    [52, 152, 219],    // blue
+    [241, 196, 15],    // yellow
+    [230, 126, 34],    // orange
+    [142, 68, 173],    // purple
+    [22, 160, 133],    // teal
+    [44, 62, 80],      // dark
+  ];
+  const result = {};
+  habitats.forEach((h, i) => {
+    const c = seed[i % seed.length];
+    result[h] = rgbToHex(c[0], c[1], c[2]);
+  });
+  return result;
+}
+
+function writeColorstripDataset(label, leafColorMap, color) {
+  let s = 'DATASET_COLORSTRIP\n';
+  s += 'SEPARATOR COMMA\n';
+  s += 'DATASET_LABEL,' + label + '\n';
+  s += 'COLOR,' + (color || '#0AA0A0') + '\n';
+  s += 'STRIP_WIDTH,30\n';
+  s += 'MARGIN,1\n';
+  s += 'BORDER_WIDTH,0\n';
+  s += 'SHOW_INTERNAL,0\n';
+  s += 'DATA\n';
+  for (const [leaf, hex] of Object.entries(leafColorMap)) {
+    s += leaf + ',' + hex + '\n';
+  }
+  return s;
+}
+
+// TREE_COLORS range entries highlight entire clades — reproduces the Fig 1A
+// pie-sector banding shown as subtree blocks (alternating light blue / light gray),
+// each labeled with a population number (1, 2, 3, ...).
+// In iTOL, after upload, click the "Colored ranges" dataset and set
+// "Cover" to "Clade" (default in newer iTOL) and "Range cover style" to
+// "Solid color background" so each sector fills the full wedge.
+function writeTreeColorsDataset(clusters) {
+  let s = 'TREE_COLORS\n';
+  s += 'SEPARATOR TAB\n';
+  s += 'DATA\n';
+  clusters.forEach((c, i) => {
+    const color = (i % 2 === 0) ? '#B0D8E8' : '#D0D0D0';
+    const label = String(i + 1);
+    // Use internalId assigned to the cluster root node (embedded in tree.nwk)
+    s += c.internalId + '\t' + 'range' + '\t' + color + '\t' + label + '\n';
+  });
+  return s;
+}
+
+function writeMultibarDataset(label, fields, fieldColors, leafValues) {
+  let s = 'DATASET_MULTIBAR\n';
+  s += 'SEPARATOR COMMA\n';
+  s += 'DATASET_LABEL,' + label + '\n';
+  s += 'COLOR,#0AA0A0\n';
+  s += 'FIELD_LABELS,' + fields.join(',') + '\n';
+  s += 'FIELD_COLORS,' + fieldColors.join(',') + '\n';
+  s += 'WIDTH,150\n';
+  s += 'BORDER_WIDTH,0\n';
+  s += 'SHOW_INTERNAL,0\n';
+  s += 'DATA\n';
+  for (const [leaf, vals] of Object.entries(leafValues)) {
+    s += leaf + ',' + vals.join(',') + '\n';
+  }
+  return s;
+}
+
+function writeSymbolsDataset(label, entries) {
+  // entries: array of {id, size, color, shape, position}
+  let s = 'DATASET_SYMBOL\n';
+  s += 'SEPARATOR COMMA\n';
+  s += 'DATASET_LABEL,' + label + '\n';
+  s += 'COLOR,#0AA0A0\n';
+  s += 'MAXIMUM_SIZE,15\n';
+  s += 'DATA\n';
+  for (const e of entries) {
+    // ID,symbol,size,color,fill,position
+    // shapes: 1=square,2=circle,3=star,4=right triangle,5=left triangle,6=checkmark
+    s += [e.id, e.shape || 2, e.size || 10, e.color, 1, (e.position == null ? 0.5 : e.position)].join(',') + '\n';
+  }
+  return s;
+}
+
+function writeHabitatsJSON(habitats, M, colors) {
+  return JSON.stringify({
+    habitats: habitats.map(h => ({ name: h, color: colors[h], emission: M[h] }))
+  }, null, 2);
+}
+
+function writePopulationsTSV(clusters, habitatColors) {
+  let s = '#cluster_id\thabitat\tcolor\tleaf_count\tleaf_names\n';
+  clusters.forEach((c, i) => {
+    s += `C${String(i + 1).padStart(3, '0')}\t${c.habitat}\t${habitatColors[c.habitat]}\t${c.leaf_nodes.length}\t${c.leaf_nodes.map(l => l.name).join(';')}\n`;
+  });
+  return s;
+}
+
+function writeStatsTSV(stats) {
+  let s = 'outer_iter\tem_counter\thabs\tscore\tmu\tdiff\n';
+  for (const r of stats) {
+    s += [r.outer, r.counter, r.habs, r.score.toFixed(4), r.mu.toExponential(4), r.diff.toExponential(4)].join('\t') + '\n';
+  }
+  return s;
+}
+
+//─── Tiny uncompressed ZIP writer (STORED method, no deflate) ───────────
+function makeZip(files) {
+  // files: [{name, content (string or Uint8Array)}]
+  const enc = new TextEncoder();
+  const buffers = [];
+  const central = [];
+  let offset = 0;
+
+  function crc32(arr) {
+    // Lazy CRC32 (table init)
+    if (!crc32.table) {
+      const t = new Uint32Array(256);
+      for (let n = 0; n < 256; n++) {
+        let c = n;
+        for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+        t[n] = c >>> 0;
+      }
+      crc32.table = t;
+    }
+    let c = 0xFFFFFFFF;
+    for (let i = 0; i < arr.length; i++) c = crc32.table[(c ^ arr[i]) & 0xFF] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  }
+  function dosTime() {
+    const d = new Date();
+    const t = ((d.getHours() & 0x1F) << 11) | ((d.getMinutes() & 0x3F) << 5) | ((d.getSeconds() / 2) & 0x1F);
+    const dt = (((d.getFullYear() - 1980) & 0x7F) << 9) | (((d.getMonth() + 1) & 0x0F) << 5) | (d.getDate() & 0x1F);
+    return { t, dt };
+  }
+
+  for (const file of files) {
+    const data = typeof file.content === 'string' ? enc.encode(file.content) : file.content;
+    const nameBytes = enc.encode(file.name);
+    const crc = crc32(data);
+    const { t, dt } = dosTime();
+
+    // local file header
+    const local = new Uint8Array(30 + nameBytes.length);
+    const dv = new DataView(local.buffer);
+    dv.setUint32(0, 0x04034b50, true);  // signature
+    dv.setUint16(4, 20, true);           // version
+    dv.setUint16(6, 0, true);            // flags
+    dv.setUint16(8, 0, true);            // method = STORED
+    dv.setUint16(10, t, true);
+    dv.setUint16(12, dt, true);
+    dv.setUint32(14, crc, true);
+    dv.setUint32(18, data.length, true);
+    dv.setUint32(22, data.length, true);
+    dv.setUint16(26, nameBytes.length, true);
+    dv.setUint16(28, 0, true);
+    local.set(nameBytes, 30);
+
+    buffers.push(local);
+    buffers.push(data);
+
+    // central directory entry
+    const cd = new Uint8Array(46 + nameBytes.length);
+    const cdv = new DataView(cd.buffer);
+    cdv.setUint32(0, 0x02014b50, true);
+    cdv.setUint16(4, 20, true);
+    cdv.setUint16(6, 20, true);
+    cdv.setUint16(8, 0, true);
+    cdv.setUint16(10, 0, true);
+    cdv.setUint16(12, t, true);
+    cdv.setUint16(14, dt, true);
+    cdv.setUint32(16, crc, true);
+    cdv.setUint32(20, data.length, true);
+    cdv.setUint32(24, data.length, true);
+    cdv.setUint16(28, nameBytes.length, true);
+    cdv.setUint16(30, 0, true);
+    cdv.setUint16(32, 0, true);
+    cdv.setUint16(34, 0, true);
+    cdv.setUint16(36, 0, true);
+    cdv.setUint32(38, 0, true);
+    cdv.setUint32(42, offset, true);
+    cd.set(nameBytes, 46);
+    central.push(cd);
+
+    offset += local.length + data.length;
+  }
+
+  const cdStart = offset;
+  let cdSize = 0;
+  for (const c of central) { buffers.push(c); cdSize += c.length; }
+
+  // EOCD
+  const eocd = new Uint8Array(22);
+  const edv = new DataView(eocd.buffer);
+  edv.setUint32(0, 0x06054b50, true);
+  edv.setUint16(8, central.length, true);
+  edv.setUint16(10, central.length, true);
+  edv.setUint32(12, cdSize, true);
+  edv.setUint32(16, cdStart, true);
+  buffers.push(eocd);
+
+  return new Blob(buffers, { type: 'application/zip' });
+}
+
+//═══════════════════════════════════════════════════════════════════════════
+// Pipeline orchestration (runs on the main thread; algorithm above is heavy
+// but JS-only, so we yield control via Promise/setTimeout between phases).
+//═══════════════════════════════════════════════════════════════════════════
+
+async function runPipeline(input, progress) {
+  const { newick, outgroup, ecologyRows, init_hab_num, collapse_thresh, converge_thresh, thresh_p, rand_iters, seed } = input;
+  const rng = makeRng(seed || Math.floor(Math.random() * 1e9));
+
+  progress({ phase: 'parse', label: 'Parsing tree…' });
+  await yieldUI();
+  const tree = parseNewick(newick);
+
+  progress({ phase: 'annotate', label: 'Annotating tree (' + tree.allLeaves.length + ' leaves)…' });
+  await yieldUI();
+  annotateUnrooted(tree);
+
+  // ensure all branch lengths are > 0
+  const positive = tree.allBranches.map(b => b.length).filter(l => l > 0);
+  const minLen = positive.length ? Math.min(...positive) : 0.001;
+  for (const b of tree.allBranches) if (b.length <= 0) b.length = minLen;
+
+  progress({ phase: 'em', label: 'Learning habitats (EM)…' });
+  await yieldUI();
+  const { habitats, M, mu, stats } = adaptML(tree, {
+    init_hab_num, collapse_thresh, converge_thresh, rateopt: 'avg', rng
+  }, progress);
+
+  progress({ phase: 'rootify', label: 'Rooting tree at outgroup…' });
+  await yieldUI();
+  rootify(tree, outgroup);
+
+  progress({ phase: 'joint', label: 'Joint Viterbi habitat assignment…' });
+  await yieldUI();
+  const jointLik = jointML(tree, M, mu, habitats);
+
+  let clusters = [];
+  if (rand_iters > 0) {
+    progress({ phase: 'rand', label: 'Empirical null (' + rand_iters + ' shuffles)…' });
+    await yieldUI();
+    const thresholds = runRandomizations(tree, M, mu, habitats, rand_iters, thresh_p, rng, progress);
+
+    progress({ phase: 'cluster', label: 'Identifying significant populations…' });
+    await yieldUI();
+    // Re-run jointML to restore ML_probs for true (un-shuffled) leaves
+    for (const l of tree.allLeaves) l.perturb_species = l.species;
+    jointML(tree, M, mu, habitats);
+    clusters = findClusters(tree, thresholds, habitats);
+  }
+
+  return { tree, habitats, M, mu, stats, jointLik, clusters, ecologyRows };
+}
+
+function yieldUI() { return new Promise(r => setTimeout(r, 0)); }
+
+//═══════════════════════════════════════════════════════════════════════════
+// UI controller
+//═══════════════════════════════════════════════════════════════════════════
+
+const DEFAULT_ECO = [
+  { pos: 1, char: 'Z', label: 'Zooplankton (≥63 µm)', color: '#FF0000' },
+  { pos: 1, char: '5', label: 'Large particle (5–63 µm)', color: '#FF9664' },
+  { pos: 1, char: '1', label: 'Small particle (1–5 µm)', color: '#00FF00' },
+  { pos: 1, char: 'F', label: 'Free-living (<1 µm)', color: '#0000FF' },
+  { pos: 2, char: 'S', label: 'Spring', color: '#969696' },
+  { pos: 2, char: 'F', label: 'Fall', color: '#000000' },
+];
+
+function renderEcoTable(rows) {
+  const tbody = document.querySelector('#eco-table tbody');
+  tbody.innerHTML = '';
+  for (const row of rows) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="number" min="1" max="8" value="${row.pos}" style="width:48px"></td>
+      <td><input type="text" maxlength="2" value="${row.char}" style="width:48px"></td>
+      <td><input type="text" value="${row.label}"></td>
+      <td><input type="color" value="${row.color}"></td>
+      <td class="x"><button class="del">×</button></td>
+    `;
+    tr.querySelector('button.del').onclick = () => { tr.remove(); };
+    tbody.appendChild(tr);
+  }
+}
+
+function readEcoTable() {
+  const rows = [];
+  for (const tr of document.querySelectorAll('#eco-table tbody tr')) {
+    const cells = tr.querySelectorAll('input');
+    rows.push({
+      pos: parseInt(cells[0].value, 10),
+      char: cells[1].value,
+      label: cells[2].value,
+      color: cells[3].value,
+    });
+  }
+  return rows;
+}
+
+function setProgress(pct, label, isError) {
+  document.querySelector('#progress-wrap').classList.add('active');
+  document.querySelector('#progress-bar-fill').style.width = pct + '%';
+  const ps = document.querySelector('#progress-status');
+  ps.textContent = label;
+  ps.classList.toggle('error', !!isError);
+}
+
+renderEcoTable(DEFAULT_ECO);
+
+document.querySelector('#add-eco-row').onclick = () => {
+  const rows = readEcoTable();
+  rows.push({ pos: 1, char: '', label: '', color: '#999999' });
+  renderEcoTable(rows);
+};
+
+document.querySelector('#tree-file').onchange = async (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const text = await f.text();
+  document.querySelector('#tree-text').value = text.trim();
+};
+
+document.querySelector('#load-example').onclick = async () => {
+  try {
+    const r = await fetch('./example/vibrio.hsp60.tree');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    document.querySelector('#tree-text').value = (await r.text()).trim();
+    document.querySelector('#outgroup').value = '5S_OUTGROUP';
+    renderEcoTable(DEFAULT_ECO);
+  } catch (err) {
+    alert('Could not load example/vibrio.hsp60.tree.\n\nIf you opened this file directly with file://, your browser is blocking fetch(). Please serve the directory with:\n\npython3 -m http.server 8000\n\nthen open http://localhost:8000/adaptml.html\n\nDetail: ' + err.message);
+  }
+};
+
+let LAST_RESULT = null;
+let LAST_FILES = null;
+
+document.querySelector('#run-btn').onclick = async () => {
+  const newick = document.querySelector('#tree-text').value.trim();
+  if (!newick) { alert('Paste or load a Newick tree first.'); return; }
+  const outgroup = document.querySelector('#outgroup').value.trim();
+  if (!outgroup) { alert('Outgroup leaf name required.'); return; }
+
+  const input = {
+    newick,
+    outgroup,
+    ecologyRows: readEcoTable(),
+    init_hab_num: parseInt(document.querySelector('#init-hab-num').value, 10),
+    collapse_thresh: parseFloat(document.querySelector('#collapse-thresh').value),
+    converge_thresh: parseFloat(document.querySelector('#converge-thresh').value),
+    thresh_p: parseFloat(document.querySelector('#thresh-p').value),
+    rand_iters: parseInt(document.querySelector('#rand-iters').value, 10),
+    seed: parseInt(document.querySelector('#seed').value, 10) || 0,
+  };
+
+  document.querySelector('#run-btn').disabled = true;
+  document.querySelector('#results').classList.remove('active');
+  setProgress(2, 'Starting…', false);
+  const t0 = performance.now();
+
+  try {
+    const result = await runPipeline(input, (msg) => {
+      if (msg.phase === 'em') {
+        const habs = msg.habs != null ? msg.habs : '';
+        setProgress(15 + Math.min(35, (msg.counter || 0) * 3),
+          `EM · outer ${msg.outerIter || 0} · iter ${msg.counter || 0} · ${habs} habitats · diff ${msg.diff != null ? msg.diff.toExponential(2) : ''}`);
+      } else if (msg.phase === 'rand') {
+        const pct = msg.iters ? Math.round(70 + (msg.it / msg.iters) * 25) : 70;
+        setProgress(pct, `Randomization · ${msg.it}/${msg.iters}`);
+      } else if (msg.label) {
+        setProgress(10, msg.label);
+      }
+    });
+    setProgress(100, `Done in ${((performance.now() - t0) / 1000).toFixed(1)} s`);
+    LAST_RESULT = result;
+    renderResults(result);
+  } catch (err) {
+    console.error(err);
+    setProgress(100, 'Error: ' + err.message, true);
+  } finally {
+    document.querySelector('#run-btn').disabled = false;
+  }
+};
+
+function renderResults(result) {
+  const { tree, habitats, M, mu, jointLik, clusters, stats, ecologyRows } = result;
+  document.querySelector('#results').classList.add('active');
+  document.querySelector('#stat-habitats').textContent = habitats.length;
+  document.querySelector('#stat-clusters').textContent = clusters.length;
+  document.querySelector('#stat-mu').textContent = mu.toExponential(3);
+  document.querySelector('#stat-lik').textContent = jointLik.toFixed(2);
+
+  // Build habitat colors from inferred-emission-vector dominance: pick the
+  // dominant filter and use its mapping from the ecology table. This makes
+  // each habitat's swatch match its strongest environmental signal.
+  const hColors = habitatColors(habitats);
+  const ecoCharColors = {};
+  for (const r of ecologyRows) ecoCharColors[r.pos + ':' + r.char] = r.color;
+
+  const grid = document.querySelector('#habitat-grid');
+  grid.innerHTML = '';
+  const filters = Object.keys(M[habitats[0]]);
+  for (const h of habitats) {
+    const card = document.createElement('div');
+    card.className = 'habitat-card';
+    const dist = M[h];
+    // dominant filter
+    let bestF = filters[0], bestV = 0;
+    for (const f of filters) if (dist[f] > bestV) { bestV = dist[f]; bestF = f; }
+    card.innerHTML = `
+      <div class="hname"><span class="swatch" style="background:${hColors[h]}"></span>${h}</div>
+      <div class="bars"></div>
+      <div class="legend"></div>
+    `;
+    const bars = card.querySelector('.bars');
+    const legend = card.querySelector('.legend');
+    // colored bars per filter
+    const sorted = Object.entries(dist).sort((a, b) => b[1] - a[1]);
+    let legendStr = '';
+    for (const [f, v] of sorted) {
+      const c1 = ecoCharColors[`1:${f[0]}`] || '#888';
+      const c2 = ecoCharColors[`2:${f[1]}`] || '#444';
+      const bar = document.createElement('div');
+      bar.style.flex = String(v);
+      bar.style.background = `linear-gradient(90deg, ${c1} 0 50%, ${c2} 50% 100%)`;
+      bar.title = `${f} = ${(v * 100).toFixed(1)}%`;
+      bars.appendChild(bar);
+      if (v > 0.05) legendStr += `<span>${f}&nbsp;${(v * 100).toFixed(0)}%</span>&nbsp;&nbsp;`;
+    }
+    legend.innerHTML = legendStr;
+    grid.appendChild(card);
+  }
+
+  LAST_FILES = buildFiles(result);
+
+  const dl = document.querySelector('#download-grid');
+  dl.innerHTML = '';
+  for (const f of LAST_FILES) {
+    const b = document.createElement('button');
+    b.className = 'btn-dl';
+    b.innerHTML = `
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <div><div class="fn">${f.name}</div><div class="desc">${f.desc}</div></div>
+    `;
+    b.onclick = () => downloadFile(f.name, f.content);
+    dl.appendChild(b);
+  }
+}
+
+function buildFiles(result) {
+  const { tree, habitats, M, mu, jointLik, clusters, stats, ecologyRows } = result;
+  assignInternalIds(tree);
+
+  const hColors = habitatColors(habitats);
+
+  // colorstrip per ecology position
+  const positions = Array.from(new Set(ecologyRows.map(r => r.pos))).sort();
+  const ecoFiles = [];
+  for (const p of positions) {
+    const rowsAtP = ecologyRows.filter(r => r.pos === p);
+    const leafColorMap = {};
+    for (const l of tree.allLeaves) {
+      const c = l.species[p - 1];
+      const eco = rowsAtP.find(r => r.char === c);
+      leafColorMap[l.name] = eco ? eco.color : '#CCCCCC';
+    }
+    const label = `Ecology pos ${p}` + (rowsAtP[0] ? ` (${rowsAtP.map(r => r.char).join('/')})` : '');
+    ecoFiles.push({
+      name: `dataset_ecology_pos${p}.txt`,
+      desc: `Colorstrip per leaf for ecology position ${p}`,
+      content: writeColorstripDataset(label, leafColorMap, rowsAtP[0] ? rowsAtP[0].color : '#0AA0A0')
+    });
+  }
+
+  // habitat symbols at ancestral nodes (one per cluster root)
+  const symbolEntries = clusters.map(c => ({
+    id: c.internalId,
+    shape: 2,             // circle
+    size: 15,
+    color: hColors[c.habitat],
+    position: 0.5,
+  }));
+  const sym = writeSymbolsDataset('Inferred habitats', symbolEntries);
+
+  // clade-range highlights — TREE_COLORS format so each cluster appears as a
+  // highlighted subtree block in iTOL (matches Fig 1A), not an outer ring
+  const clusterStrip = writeTreeColorsDataset(clusters);
+
+  const files = [
+    { name: 'tree.nwk', desc: 'Rooted Newick tree with internal node IDs', content: writeNewick(tree) },
+    ...ecoFiles,
+    { name: 'dataset_habitat_symbols.txt', desc: 'Habitat circle at every cluster root', content: sym },
+    { name: 'dataset_population_strips.txt', desc: 'Alternating band per significant population', content: clusterStrip },
+    { name: 'habitats.json', desc: 'Learned emission probability matrix', content: writeHabitatsJSON(habitats, M, hColors) },
+    { name: 'populations.tsv', desc: 'Cluster members (one row per population)', content: writePopulationsTSV(clusters, hColors) },
+    { name: 'stats.tsv', desc: 'EM convergence log', content: writeStatsTSV(stats) },
+    { name: 'README.txt', desc: 'How to upload to iTOL', content: itolReadme() },
+  ];
+  return files;
+}
+
+function itolReadme() {
+  return `AdaptML output — uploading to iTOL
+====================================
+
+1. Go to https://itol.embl.de/upload.cgi
+2. Upload tree.nwk
+3. On the resulting tree page, drag-and-drop all dataset_*.txt files onto the canvas
+   (or use the Datasets tab → "Upload annotation files").
+4. In the iTOL controls, you can:
+   - Reorder datasets (Datasets tab)
+   - Toggle visibility per dataset
+   - Switch the tree to circular layout (Controls → Mode → Circular) to match
+     Fig 1A of Hunt et al. (2008).
+
+Files:
+  tree.nwk                          rooted Newick; internal nodes named N00001…
+  dataset_ecology_pos*.txt          per-position ecology strip (DATASET_COLORSTRIP)
+  dataset_habitat_symbols.txt       habitat circles at each significant cluster's root
+                                    (DATASET_SYMBOL — circle, color = habitat)
+  dataset_population_strips.txt     alternating bands per significant population
+                                    (DATASET_COLORSTRIP — blue/gray)
+  habitats.json                     learned emission distributions per habitat
+  populations.tsv                   strain membership per significant cluster
+  stats.tsv                         EM convergence log
+`;
+}
+
+function downloadFile(name, content) {
+  const blob = content instanceof Blob ? content : new Blob([content], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+document.querySelector('#download-zip').onclick = () => {
+  if (!LAST_FILES) return;
+  const blob = makeZip(LAST_FILES);
+  downloadFile('adaptml_output.zip', blob);
+};
+</script>
+</body>
+</html>

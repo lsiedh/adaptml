@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # script to harvest empirical likelihoods from random trees and print
 # out % confidence boundaries
@@ -17,13 +17,13 @@ thresh = float(sys.argv[3])
 trees = glob.glob(emp_tree_d + "*")
 
 # where to write the results
-out_f = open(write_d + "/thresh.file",'w')
+out_f = open(write_d + "/thresh.file", 'w')
 lik_dict = {}
 
 for tree in trees:
 
     # open the likelihood file
-    lik_file = open(tree + "/lik.file",'r')
+    lik_file = open(tree + "/lik.file", 'r')
     lik_lines = lik_file.readlines()
 
     for line in lik_lines:
@@ -39,7 +39,7 @@ for tree in trees:
 # sort the likelihoods
 for leaves in lik_dict:
     lik_dict[leaves].sort()
-    perc = lik_dict[leaves][int(len(lik_dict[leaves])*thresh)]
+    perc = lik_dict[leaves][int(len(lik_dict[leaves]) * thresh)]
     # write out the results
     out_f.write(leaves + " " + str(perc) + "\n")
 

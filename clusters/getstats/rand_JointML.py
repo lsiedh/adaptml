@@ -1,23 +1,21 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # AdaptML
 
 import os
 import sys
+import math
 import pdb
 import time
 import random
 import glob
 
-from numpy.linalg import *
-from numpy.core import *
-from numpy.lib import *
 from numpy import *
 
 import rand_multitree as multitree
 import rand_ML as ML
 
 start_time = time.time()
-sys.setrecursionlimit(10000)
+sys.setrecursionlimit(50000)
 
 # potential variables:
 tree_fn = None
@@ -35,7 +33,7 @@ iter_limit = 10000
 
 # load inputs #
 inputs = sys.argv
-for ind in range(1,len(inputs)):
+for ind in range(1, len(inputs)):
     arg_parts = inputs[ind].split('=')
     code = arg_parts[0]
     arg = arg_parts[1]
@@ -53,7 +51,7 @@ for ind in range(1,len(inputs)):
         color_fn = arg
     elif code == 'write':
         write_dir = arg
-    elif code =='thresh':
+    elif code == 'thresh':
         thresh_fn = arg
     elif code == 'cdist':
         cdist = True
@@ -63,13 +61,13 @@ for ind in range(1,len(inputs)):
         iter_limit = int(arg)
 
 # load the parameters
-migration_file = open(migration_fn,'r')
+migration_file = open(migration_fn, 'r')
 migration_matrix = eval(migration_file.read())
-mu_file = open(mu_fn,'r')
+mu_file = open(mu_fn, 'r')
 mu = float(mu_file.read().strip())
 
 # build the tree #
-tree_file = open(tree_fn,"r")
+tree_file = open(tree_fn, "r")
 tree_string = tree_file.read().strip()
 tree = multitree.multitree()
 tree.build(tree_string)
@@ -95,7 +93,7 @@ if kids[0].name in outgroup:
     true_root = kids[1]
 else:
     true_root = kids[0]
-ML.LearnLiks(tree,mu,migration_matrix,true_root)
+ML.LearnLiks(tree, mu, migration_matrix, true_root)
 
 # estimate the states
 ML.EstimateStates(true_root)
@@ -103,7 +101,7 @@ ML.EstimateStates(true_root)
 # begin to generate the random data
 count = len(glob.glob(write_dir + "/*"))
 if count > 0:
-    print "write directory not empty; exiting"
+    print("write directory not empty; exiting")
     sys.exit(1)
 
 while count < iter_limit:
@@ -118,15 +116,15 @@ while count < iter_limit:
 
     # shuffle the tree's leaves
     tree.LeafShuffle()
-    
+
     # relearn the likelihoods using the new leaves and the old states
-    ML.LearnShuffleLiks(tree,mu,migration_matrix,true_root)
+    ML.LearnShuffleLiks(tree, mu, migration_matrix, true_root)
 
     # write out the likelihoods at each internal node
-    lik_file = open(dir_name + "lik.file",'w')
+    lik_file = open(dir_name + "lik.file", 'w')
     files = {}
     files['lik'] = lik_file
     true_root.PieCharts(files)
     lik_file.close()
-    
-    print float(count) / iter_limit
+
+    print(float(count) / iter_limit)
