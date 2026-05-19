@@ -15,18 +15,59 @@ Both reproduce Figure 1A–B of [Hunt, David, Gevers, Preheim, Alm & Polz, *Scie
 
 ## 1. Python 3 CLI
 
-### Install
+### Prerequisites — install Python 3 and Git
+
+You need **Python 3.9 or newer** and **Git**. Check with `python3 --version` and `git --version`; if either is missing, follow the steps for your OS below.
+
+**macOS**
+
+```bash
+# Install Homebrew if you don't have it (https://brew.sh)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Install Python and Git
+brew install python git
+```
+
+**Linux (Debian / Ubuntu)**
+
+```bash
+sudo apt update
+sudo apt install -y python3 python3-venv python3-pip git
+```
+
+**Linux (Fedora / RHEL)**
+
+```bash
+sudo dnf install -y python3 python3-pip git
+```
+
+**Windows**
+
+1. Install Python 3 from [python.org/downloads](https://www.python.org/downloads/) — during setup, tick **"Add python.exe to PATH"**.
+2. Install Git from [git-scm.com/download/win](https://git-scm.com/download/win).
+3. Run the commands below from **PowerShell** or **Git Bash**, substituting `python` for `python3` and `.venv\Scripts\activate` for `source .venv/bin/activate`.
+
+### Get the code
+
+```bash
+git clone https://github.com/scelse/adaptml-almlab.git
+cd adaptml-almlab
+```
+
+### Install Python dependencies
 
 ```bash
 python3 -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate           # Windows: .venv\Scripts\activate
+pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
 ### Run the included Vibrionaceae example
 
 ```bash
-python3 wrapper/WrAdaptMLFile.py    example/adaptml.file
+python3 wrapper/WrAdaptMLFile.py     example/adaptml.file
 python3 wrapper/WrapLikelihoodFile.py example/likelihood.file
 ```
 
