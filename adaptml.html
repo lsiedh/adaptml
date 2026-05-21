@@ -1881,6 +1881,119 @@ function renderResults(result) {
   }
 }
 
+//─── Figure 1B (summary populations view) ────────────────────────────────
+// Each significant population becomes one tip of an ultrametric-style summary
+// tree, annotated with size-fraction + season stacked bars and a habitat circle.
+// Population id Pnn corresponds to the nth row of populations.tsv (C00n).
+function popId(i) { return 'P' + String(i + 1).padStart(2, '0'); }
+
+// Pruned summary tree: induced topology on a single representative leaf per
+// cluster (degree-2 nodes suppressed, branch lengths summed). Non-cluster
+// leaves are dropped so the tips are exactly the populations. Does NOT mutate
+// the input tree — renaming happens only in the emitted string.
+function writeFigure1BTree(tree, clusters) {
+  const repId = new Map();
+  const used = new Set();
+  clusters.forEach((c, i) => {
+    const rep = c.leaf_nodes.find(l => !used.has(l)) || c.leaf_nodes[0];
+    used.add(rep);
+    repId.set(rep, popId(i));
+  });
+  const reps = new Set(repId.keys());
+
+  function branchLen(n) {
+    if (!n.parent) return 0;
+    for (const br of n.branches) {
+      if (br.ends[0] === n.parent || br.ends[1] === n.parent) return br.length;
+    }
+    return 0;
+  }
+  function hasRep(n) {
+    if (n.isLeaf) return reps.has(n);
+    return n.children.some(hasRep);
+  }
+  // accLen folds the branch lengths of suppressed degree-2 ancestors into the child.
+  function rec(n, accLen) {
+    if (n.isLeaf) {
+      if (!reps.has(n)) return null;
+      return repId.get(n) + ':' + (accLen + branchLen(n)).toFixed(6);
+    }
+    const keptKids = n.children.filter(hasRep);
+    if (keptKids.length === 0) return null;
+    if (keptKids.length === 1) return rec(keptKids[0], accLen + branchLen(n));
+    const inner = keptKids.map(c => rec(c, 0)).filter(Boolean).join(',');
+    const len = n.parent ? (accLen + branchLen(n)) : 0;
+    return '(' + inner + ')' + ':' + len.toFixed(6);
+  }
+  return rec(tree.trueRoot, 0) + ';';
+}
+
+// Paper-exact normalization: divide each population's per-category count by the
+// dataset-wide total for that category (corrects uneven sampling), aggregate
+// into size / season bars, then renormalize each bar to sum to 1.
+function figure1BBars(tree, clusters, ecologyRows) {
+  const sizes = ['Z', '5', '1', 'F'];   // Fig 1B order: >63, 5-63, 1-5, <1 µm
+  const seasons = ['F', 'S'];           // fall, spring
+  const sizeLabel = { Z: '>63um', '5': '5-63um', '1': '1-5um', F: '<1um' };
+  const seasonLabel = { F: 'Fall', S: 'Spring' };
+
+  const total = {};
+  for (const s of sizes) for (const e of seasons) total[s + e] = 0;
+  for (const l of tree.allLeaves) {
+    const k = l.species[0] + l.species[1];
+    if (k in total) total[k]++;
+  }
+
+  const sizeColorMap = {}, seasonColorMap = {};
+  for (const r of ecologyRows) {
+    if (r.pos === 1) sizeColorMap[r.char] = r.color;
+    if (r.pos === 2) seasonColorMap[r.char] = r.color;
+  }
+
+  const sizeVals = {}, seasonVals = {};
+  clusters.forEach((c, i) => {
+    const id = popId(i);
+    const raw = {};
+    for (const s of sizes) for (const e of seasons) raw[s + e] = 0;
+    for (const l of c.leaf_nodes) {
+      const k = l.species[0] + l.species[1];
+      if (k in raw) raw[k]++;
+    }
+    const w = {};
+    for (const k in raw) w[k] = total[k] > 0 ? raw[k] / total[k] : 0;
+
+    const sv = sizes.map(s => seasons.reduce((a, e) => a + w[s + e], 0));
+    const svSum = sv.reduce((a, b) => a + b, 0) || 1;
+    sizeVals[id] = sv.map(v => +(v / svSum).toFixed(6));
+
+    const ev = seasons.map(e => sizes.reduce((a, s) => a + w[s + e], 0));
+    const evSum = ev.reduce((a, b) => a + b, 0) || 1;
+    seasonVals[id] = ev.map(v => +(v / evSum).toFixed(6));
+  });
+
+  return {
+    sizeFieldLabels: sizes.map(s => sizeLabel[s] || s),
+    seasonFieldLabels: seasons.map(e => seasonLabel[e] || e),
+    sizeColors: sizes.map(s => sizeColorMap[s] || '#999999'),
+    seasonColors: seasons.map(e => seasonColorMap[e] || '#999999'),
+    sizeVals, seasonVals,
+  };
+}
+
+// Per-habitat size / season distribution (the small Hₐ–H_f legend chart),
+// aggregated from the 8-category emission matrix (each habitat row sums to 1).
+function writeHabitatDistTSV(habitats, M) {
+  const sizes = ['Z', '5', '1', 'F'], seasons = ['F', 'S'];
+  let s = '#habitat\tsize_>63\tsize_5-63\tsize_1-5\tsize_<1\tseason_fall\tseason_spring\n';
+  for (const h of habitats) {
+    const em = M[h] || {};
+    const sv = sizes.map(sz => seasons.reduce((a, e) => a + (em[sz + e] || 0), 0));
+    const ev = seasons.map(e => sizes.reduce((a, sz) => a + (em[sz + e] || 0), 0));
+    s += [h, ...sv.map(v => v.toFixed(6)), ...ev.map(v => v.toFixed(6))].join('\t') + '\n';
+  }
+  return s;
+}
+
 function buildFiles(result) {
   const { tree, habitats, M, mu, jointLik, clusters, stats, ecologyRows } = result;
   assignInternalIds(tree);
@@ -1920,6 +2033,17 @@ function buildFiles(result) {
   // highlighted subtree block in iTOL (matches Fig 1A), not an outer ring
   const clusterStrip = writeTreeColorsDataset(clusters);
 
+  // Figure 1B — summary populations tree + per-population size/season bars,
+  // habitat circles, and the habitat-distribution legend chart.
+  const f1bTree = writeFigure1BTree(tree, clusters);
+  const f1bBars = figure1BBars(tree, clusters, ecologyRows);
+  const f1bSize = writeMultibarDataset('Size fraction', f1bBars.sizeFieldLabels, f1bBars.sizeColors, f1bBars.sizeVals);
+  const f1bSeason = writeMultibarDataset('Season', f1bBars.seasonFieldLabels, f1bBars.seasonColors, f1bBars.seasonVals);
+  const f1bHab = writeSymbolsDataset('Population habitat', clusters.map((c, i) => ({
+    id: popId(i), shape: 2, size: 15, color: hColors[c.habitat], position: 0,
+  })));
+  const f1bHabDist = writeHabitatDistTSV(habitats, M);
+
   const files = [
     { name: 'tree.nwk', desc: 'Rooted Newick tree with internal node IDs', content: writeNewick(tree) },
     ...ecoFiles,
@@ -1928,6 +2052,11 @@ function buildFiles(result) {
     { name: 'habitats.json', desc: 'Learned emission probability matrix', content: writeHabitatsJSON(habitats, M, hColors) },
     { name: 'populations.tsv', desc: 'Cluster members (one row per population)', content: writePopulationsTSV(clusters, hColors) },
     { name: 'stats.tsv', desc: 'EM convergence log', content: writeStatsTSV(stats) },
+    { name: 'figure1B_tree.nwk', desc: 'Fig 1B summary tree — one tip per population', content: f1bTree },
+    { name: 'figure1B_dataset_size_fractions.txt', desc: 'Fig 1B size-fraction stacked bars (normalized)', content: f1bSize },
+    { name: 'figure1B_dataset_seasons.txt', desc: 'Fig 1B season stacked bars (normalized)', content: f1bSeason },
+    { name: 'figure1B_dataset_habitats.txt', desc: 'Fig 1B habitat circle per population', content: f1bHab },
+    { name: 'figure1B_habitat_distributions.tsv', desc: 'Fig 1B Hₐ–H_f legend distributions', content: f1bHabDist },
     { name: 'README.txt', desc: 'How to upload to iTOL', content: itolReadme() },
   ];
   return files;
@@ -1957,6 +2086,27 @@ Files:
   habitats.json                     learned emission distributions per habitat
   populations.tsv                   strain membership per significant cluster
   stats.tsv                         EM convergence log
+
+Figure 1B (summary populations view)
+-------------------------------------
+To reproduce Fig 1B, upload figure1B_tree.nwk as a SEPARATE iTOL tree, then
+drop the figure1B_dataset_*.txt files onto it. For the ultrametric look, enable
+Controls -> "Ignore branch lengths" (cladogram mode).
+
+  figure1B_tree.nwk                 summary tree, one tip per population (Pnn);
+                                    Pnn = the nth row of populations.tsv (C00n)
+  figure1B_dataset_size_fractions.txt   per-population size-fraction stacked bar
+                                        (DATASET_MULTIBAR; >63/5-63/1-5/<1 µm)
+  figure1B_dataset_seasons.txt      per-population season stacked bar
+                                    (DATASET_MULTIBAR; fall/spring)
+  figure1B_dataset_habitats.txt     habitat circle at each population tip
+                                    (DATASET_SYMBOL; color = habitat)
+  figure1B_habitat_distributions.tsv  Hₐ–H_f size/season distributions
+                                      (the small legend chart in Fig 1B)
+
+Bars are normalized by the total counts in each environmental category (to
+correct for uneven sampling), then renormalized per population to sum to 1,
+matching the Fig 1 caption in Hunt et al. (2008).
 `;
 }
 

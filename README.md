@@ -13,6 +13,30 @@ Both reproduce Figure 1A–B of [Hunt, David, Gevers, Preheim, Alm & Polz, *Scie
 
 ---
 
+## Getting the files from GitHub
+
+**GitHub** is a website that hosts code. You do not need a GitHub account to download this tool — just follow one of the two options below.
+
+### Option A — Download a ZIP (easiest, no Git required)
+
+1. Open **<https://github.com/lsiedh/adaptml>** in your browser.
+2. Click the green **"< > Code"** button near the top-right of the page.
+3. Choose **"Download ZIP"**.
+4. Unzip the downloaded file. You will get a folder called `adaptml-main` (or similar). Rename it to `adaptml` if you like, and note where it is — you will `cd` into it for every command below.
+
+### Option B — Clone with Git (easier to update later)
+
+If you already have Git installed (see prerequisites below), open a terminal and run:
+
+```bash
+git clone https://github.com/lsiedh/adaptml.git
+cd adaptml
+```
+
+To update the code later: `git pull`.
+
+---
+
 ## 1. Python 3 CLI
 
 ### Prerequisites — install Python 3 and Git
@@ -50,10 +74,7 @@ sudo dnf install -y python3 python3-pip git
 
 ### Get the code
 
-```bash
-git clone https://github.com/scelse/adaptml-almlab.git
-cd adaptml-almlab
-```
+Download the ZIP or clone with Git as described in the **"Getting the files from GitHub"** section at the top of this document, then `cd` into the folder before running the commands below.
 
 ### Install Python dependencies
 
