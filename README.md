@@ -3,7 +3,7 @@ AdaptML
 
 Automatically partition a gene phylogeny by using genetic and ecological similarity.
 
-This is a SCELSE fork of Lawrence David's [almlab/adaptml](https://github.com/almlab/adaptml).
+This is a SCELSE fork of Eric Alm's [almlab/adaptml](https://github.com/almlab/adaptml).
 It ships **two** ways to run the same analysis:
 
 1. **Python 3 CLI** — the original Python pipeline, ported to modern Python.
